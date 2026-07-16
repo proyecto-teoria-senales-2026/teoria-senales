@@ -1,0 +1,48 @@
+"""Cálculos de convolución usados por el ejercicio piloto."""
+
+from __future__ import annotations
+
+import numpy as np
+from numpy.typing import ArrayLike, NDArray
+
+
+def linear_convolution(x: ArrayLike, h: ArrayLike) -> NDArray[np.float64]:
+    """Calcula la convolución lineal de dos secuencias finitas."""
+
+    return np.convolve(np.asarray(x, dtype=float), np.asarray(h, dtype=float))
+
+
+def frequency_domain_convolution(
+    x: ArrayLike, h: ArrayLike, transform_length: int
+) -> NDArray[np.float64]:
+    """Calcula IFFT(FFT(x, N)·FFT(h, N)) para una longitud N dada."""
+
+    if transform_length <= 0:
+        raise ValueError("La longitud de transformación debe ser positiva.")
+
+    x_array = np.asarray(x, dtype=float)
+    h_array = np.asarray(h, dtype=float)
+    if transform_length < max(len(x_array), len(h_array)):
+        raise ValueError("N no puede ser menor que la longitud de las secuencias.")
+
+    spectrum_product = np.fft.fft(x_array, transform_length) * np.fft.fft(
+        h_array, transform_length
+    )
+    result = np.fft.ifft(spectrum_product)
+    return np.real_if_close(result, tol=1000).real
+
+
+def minimum_transform_length(x: ArrayLike, h: ArrayLike) -> int:
+    """Devuelve la longitud mínima para evitar solapamiento circular."""
+
+    return len(np.asarray(x)) + len(np.asarray(h)) - 1
+
+
+def values_match(answer: ArrayLike, expected: ArrayLike, tolerance: float = 1e-9) -> bool:
+    """Compara dos secuencias considerando longitud y tolerancia numérica."""
+
+    answer_array = np.asarray(answer, dtype=float)
+    expected_array = np.asarray(expected, dtype=float)
+    return answer_array.shape == expected_array.shape and bool(
+        np.allclose(answer_array, expected_array, atol=tolerance, rtol=0.0)
+    )
