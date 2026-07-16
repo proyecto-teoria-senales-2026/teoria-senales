@@ -109,7 +109,7 @@ def run_interactive(output_directory: str | Path) -> tuple[Path, Path]:
 
 
 def run_demo(output_directory: str | Path) -> tuple[Path, Path]:
-    """Genera una sesión reproducible para mostrar el funcionamiento en tutoría."""
+    """Genera una sesión reproducible para mostrar el funcionamiento del piloto."""
 
     exercise = ConvolutionPilot()
     tracker = SessionTracker("Estudiante de demostración", "DEMO-001", exercise)

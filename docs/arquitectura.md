@@ -15,4 +15,4 @@ La propuesta separa el software por responsabilidades. De este modo, la interfaz
 - **Persistencia:** conserva la sesión en una estructura recuperable.
 - **Reportes:** construye un PDF por estudiante y ejercicio.
 
-La descripción completa, el flujo de información y las decisiones técnicas pendientes están disponibles en el [documento de arquitectura](Arquitectura_Sistema_Tutoria_17_Julio.pdf).
+La descripción completa, el flujo de información y las decisiones técnicas pendientes están disponibles en el [documento de arquitectura](Arquitectura_Inicial_Sistema.pdf).

@@ -1,6 +1,6 @@
 # Software interactivo para Teoría de Señales
 
-Este repositorio reúne el primer avance funcional del proyecto de grado orientado al desarrollo de un software interactivo para la generación, el análisis espectral y la práctica guiada de señales discretas en la asignatura Teoría de Señales.
+Este repositorio reúne el desarrollo del proyecto de grado orientado a construir un software interactivo para la generación, el análisis espectral y la práctica guiada de señales discretas en la asignatura Teoría de Señales.
 
 **Autores**
 
@@ -9,9 +9,9 @@ Este repositorio reúne el primer avance funcional del proyecto de grado orienta
 
 **Programa:** Ingeniería Electrónica  
 **Institución:** Universidad de Ibagué  
-**Estado del proyecto:** arquitectura inicial y piloto funcional para la tutoría del 17 de julio de 2026.
+**Estado del proyecto:** arquitectura inicial y piloto funcional del ejercicio de convolución.
 
-## Alcance de este avance
+## Estado actual
 
 La versión disponible implementa el núcleo del ejercicio **C3-3: Convolución lineal de señales discretas y verificación mediante DFT/FFT**. El ejercicio conserva las secuencias y longitudes de transformación aprobadas para el piloto.
 
@@ -98,13 +98,13 @@ Las pruebas verifican los resultados numéricos de referencia, la validación de
 
 ## Documentación
 
-- [Arquitectura inicial del sistema](docs/Arquitectura_Sistema_Tutoria_17_Julio.pdf)
+- [Arquitectura inicial del sistema](docs/Arquitectura_Inicial_Sistema.pdf)
 - [Diagrama de arquitectura](docs/Diagrama_Arquitectura_Sistema.png)
-- [Alcance presentado para la tutoría](docs/alcance_tutoria_17_julio.md)
+- [Decisiones y estado del desarrollo](docs/estado_actual.md)
 - [Reporte de demostración con datos ficticios](docs/evidencias/reporte_demostracion_C3-3.pdf)
 
 ## Límites actuales
 
-Este repositorio no contiene todavía la interfaz gráfica final, la integración de voz ni los otros once ejercicios. También está pendiente validar con los tutores el mecanismo definitivo de almacenamiento, la forma de consulta del reporte y el nivel de automatización de los criterios interpretativos.
+Este repositorio no contiene todavía la interfaz gráfica final, la integración de voz ni los otros once ejercicios. También falta definir el mecanismo definitivo de almacenamiento, la forma de consulta del reporte y el nivel de automatización de los criterios interpretativos.
 
 El código y la documentación se mantienen en un repositorio privado mientras se definen las condiciones institucionales de uso y distribución.
