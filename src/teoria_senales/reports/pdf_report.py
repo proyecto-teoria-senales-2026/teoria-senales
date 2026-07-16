@@ -6,6 +6,7 @@ from io import BytesIO
 from pathlib import Path
 
 import matplotlib
+import reportlab
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -14,6 +15,8 @@ from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
     Image,
     KeepTogether,
@@ -33,6 +36,25 @@ NAVY = colors.HexColor("#233F6B")
 BLUE = colors.HexColor("#3568A8")
 LIGHT_BLUE = colors.HexColor("#EAF1F8")
 LIGHT_GRAY = colors.HexColor("#F3F4F6")
+REGULAR_FONT = "Vera"
+BOLD_FONT = "Vera-Bold"
+
+
+def _register_fonts() -> None:
+    """Incrusta una tipografía estable para conservar el diseño del PDF."""
+
+    fonts_directory = Path(reportlab.__file__).resolve().parent / "fonts"
+    if REGULAR_FONT not in pdfmetrics.getRegisteredFontNames():
+        pdfmetrics.registerFont(TTFont(REGULAR_FONT, fonts_directory / "Vera.ttf"))
+    if BOLD_FONT not in pdfmetrics.getRegisteredFontNames():
+        pdfmetrics.registerFont(TTFont(BOLD_FONT, fonts_directory / "VeraBd.ttf"))
+    pdfmetrics.registerFontFamily(
+        REGULAR_FONT,
+        normal=REGULAR_FONT,
+        bold=BOLD_FONT,
+        italic=REGULAR_FONT,
+        boldItalic=BOLD_FONT,
+    )
 
 
 def _display_status(value: str) -> str:
@@ -57,6 +79,15 @@ def _format_sequence(values: object) -> str:
     return "{" + ", ".join(formatted) + "}"
 
 
+def _format_date(value: str) -> str:
+    date_part = value[:10]
+    try:
+        year, month, day = date_part.split("-")
+    except ValueError:
+        return date_part
+    return f"{day}/{month}/{year}"
+
+
 def _results_figure(session: SessionRecord) -> BytesIO:
     linear = session.results.get("convolucion_lineal", [])
     n3 = session.results.get("resultado_N3", [])
@@ -72,6 +103,7 @@ def _results_figure(session: SessionRecord) -> BytesIO:
         axis.set_title(title, fontsize=9)
         axis.set_xlabel("n", fontsize=8)
         axis.set_ylabel("Amplitud", fontsize=8)
+        axis.set_xticks(indices)
         axis.grid(alpha=0.25)
         axis.tick_params(labelsize=8)
     buffer = BytesIO()
@@ -82,6 +114,7 @@ def _results_figure(session: SessionRecord) -> BytesIO:
 
 
 def generate_pdf_report(session: SessionRecord, output_directory: str | Path) -> Path:
+    _register_fonts()
     output_path = Path(output_directory)
     output_path.mkdir(parents=True, exist_ok=True)
     filename = f"reporte_{safe_name(session.student_id)}_{session.exercise_id}.pdf"
@@ -92,7 +125,7 @@ def generate_pdf_report(session: SessionRecord, output_directory: str | Path) ->
         ParagraphStyle(
             name="ReportTitle",
             parent=styles["Title"],
-            fontName="Helvetica-Bold",
+            fontName=BOLD_FONT,
             fontSize=17,
             leading=21,
             textColor=NAVY,
@@ -104,7 +137,7 @@ def generate_pdf_report(session: SessionRecord, output_directory: str | Path) ->
         ParagraphStyle(
             name="Section",
             parent=styles["Heading2"],
-            fontName="Helvetica-Bold",
+            fontName=BOLD_FONT,
             fontSize=11,
             leading=14,
             textColor=NAVY,
@@ -116,7 +149,7 @@ def generate_pdf_report(session: SessionRecord, output_directory: str | Path) ->
         ParagraphStyle(
             name="ExerciseTitle",
             parent=styles["Heading3"],
-            fontName="Helvetica-Bold",
+            fontName=BOLD_FONT,
             fontSize=11,
             leading=14,
             alignment=TA_CENTER,
@@ -124,7 +157,7 @@ def generate_pdf_report(session: SessionRecord, output_directory: str | Path) ->
             spaceAfter=8,
         )
     )
-    styles["BodyText"].fontName = "Helvetica"
+    styles["BodyText"].fontName = REGULAR_FONT
     styles["BodyText"].fontSize = 9.2
     styles["BodyText"].leading = 12.3
 
@@ -147,7 +180,7 @@ def generate_pdf_report(session: SessionRecord, output_directory: str | Path) ->
 
     identity_data = [
         ["Estudiante", session.student_name, "Identificación", session.student_id],
-        ["Ejercicio", session.exercise_id, "Fecha", (session.finished_at or session.started_at)[:10]],
+        ["Ejercicio", session.exercise_id, "Fecha", _format_date(session.finished_at or session.started_at)],
         ["Sesión", session.session_id[:8], "Estado", "Finalizada" if session.finished_at else "En curso"],
     ]
     identity_table = Table(identity_data, colWidths=[2.2 * cm, 5.6 * cm, 2.2 * cm, 5.6 * cm])
@@ -158,9 +191,9 @@ def generate_pdf_report(session: SessionRecord, output_directory: str | Path) ->
                 ("BACKGROUND", (2, 0), (2, -1), LIGHT_BLUE),
                 ("TEXTCOLOR", (0, 0), (0, -1), NAVY),
                 ("TEXTCOLOR", (2, 0), (2, -1), NAVY),
-                ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
-                ("FONTNAME", (2, 0), (2, -1), "Helvetica-Bold"),
-                ("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
+                ("FONTNAME", (0, 0), (0, -1), BOLD_FONT),
+                ("FONTNAME", (2, 0), (2, -1), BOLD_FONT),
+                ("FONTNAME", (0, 0), (-1, -1), REGULAR_FONT),
                 ("FONTSIZE", (0, 0), (-1, -1), 8.5),
                 ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#B7C6D8")),
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
@@ -190,21 +223,34 @@ def generate_pdf_report(session: SessionRecord, output_directory: str | Path) ->
             [
                 ("BACKGROUND", (0, 0), (-1, 0), NAVY),
                 ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
+                ("FONTNAME", (0, 0), (-1, 0), BOLD_FONT),
+                ("FONTNAME", (0, 1), (-1, -1), REGULAR_FONT),
                 ("FONTSIZE", (0, 0), (-1, -1), 8),
+                ("FONTSIZE", (0, 0), (-1, 0), 7.2),
                 ("ALIGN", (1, 1), (-1, -1), "CENTER"),
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, LIGHT_GRAY]),
                 ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#C6CDD6")),
                 ("TOPPADDING", (0, 0), (-1, -1), 5),
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 4),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 4),
             ]
         )
     )
     story.extend([step_table, Paragraph("Resultados registrados", styles["Section"])])
 
     result_rows = [["Resultado", "Valor"]]
+    result_rows.append(
+        [
+            "Longitudes identificadas",
+            (
+                f"Lx = {session.results.get('Lx', '-')}, "
+                f"Lh = {session.results.get('Lh', '-')}, "
+                f"Ly = {session.results.get('Ly', '-')}"
+            ),
+        ]
+    )
     for key, label in (
         ("convolucion_lineal", "Convolución lineal"),
         ("resultado_N3", "Resultado con N = 3"),
@@ -217,8 +263,8 @@ def generate_pdf_report(session: SessionRecord, output_directory: str | Path) ->
             [
                 ("BACKGROUND", (0, 0), (-1, 0), BLUE),
                 ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
+                ("FONTNAME", (0, 0), (-1, 0), BOLD_FONT),
+                ("FONTNAME", (0, 1), (-1, -1), REGULAR_FONT),
                 ("FONTSIZE", (0, 0), (-1, -1), 8.5),
                 ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#C6CDD6")),
                 ("TOPPADDING", (0, 0), (-1, -1), 5),
@@ -263,8 +309,8 @@ def generate_pdf_report(session: SessionRecord, output_directory: str | Path) ->
             [
                 ("BACKGROUND", (0, 0), (-1, 0), NAVY),
                 ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-                ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
+                ("FONTNAME", (0, 0), (-1, 0), BOLD_FONT),
+                ("FONTNAME", (0, 1), (-1, -1), REGULAR_FONT),
                 ("FONTSIZE", (0, 0), (-1, -1), 8),
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, LIGHT_GRAY]),
@@ -294,7 +340,7 @@ def generate_pdf_report(session: SessionRecord, output_directory: str | Path) ->
 
     def add_footer(canvas: object, doc: object) -> None:
         canvas.saveState()
-        canvas.setFont("Helvetica", 7.5)
+        canvas.setFont(REGULAR_FONT, 7.5)
         canvas.setFillColor(colors.HexColor("#667085"))
         canvas.drawString(1.7 * cm, 0.8 * cm, "Proyecto Teoría de Señales")
         canvas.drawRightString(A4[0] - 1.7 * cm, 0.8 * cm, f"Página {doc.page}")
