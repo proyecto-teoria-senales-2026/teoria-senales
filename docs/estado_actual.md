@@ -37,11 +37,18 @@ Este documento deja por escrito qué se mantiene del planteamiento aprobado, qu�
 - Visualización numérica y gráfica de las señales `x[n]` y `h[n]`.
 - Primer paso guiado para identificar `Lx`, `Lh` y `Ly`, con verificación,
   retroalimentación y registro de ayudas e intentos.
+- Segundo paso guiado para calcular y comprobar la convolución lineal.
+- Tercer paso guiado para verificar mediante DFT/FFT el caso `N = 3` y
+  reconocer el solapamiento circular.
+- Cuarto paso guiado para verificar mediante DFT/FFT el caso `N = 5` y
+  comparar su resultado con la convolución lineal.
+- Recuperación en pantalla de las respuestas, intentos y ayudas de los cuatro
+  pasos numéricos.
 - Configuración única de las señales y los resultados esperados del C3-3.
 - Lectura de secuencias numéricas con corchetes, paréntesis, comas, punto y coma
   o espacios.
-- Manejo de texto no numérico en los pasos 2, 3 y 4 como respuesta incorrecta,
-  sin interrumpir la aplicación.
+- Manejo de texto no numérico o respuestas vacías en los pasos 2, 3 y 4 sin
+  interrumpir la aplicación ni alterar el historial con intentos vacíos.
 - Entorno local reconstruido y verificable mediante `python -m pip check`.
 - Generación del reporte PDF con resultados, gráficas y criterios.
 - Pruebas automáticas del cálculo, la evaluación, la interfaz y los archivos

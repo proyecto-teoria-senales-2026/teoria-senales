@@ -30,14 +30,18 @@ El desarrollo permite:
   sin asumir un formato institucional;
 - visualizar las señales de entrada del C3-3 como secuencias y gráficas discretas;
 - desarrollar y verificar el reconocimiento de longitudes desde la interfaz;
+- calcular la convolución lineal desde la interfaz y comprobar su gráfica;
+- verificar mediante DFT/FFT los casos `N = 3` y `N = 5`;
+- comparar visualmente el resultado circular con la convolución lineal;
 - calificar automáticamente cuatro preguntas sobre nueve puntos;
 - guardar la sesión en un archivo JSON;
 - generar un reporte PDF por estudiante y ejercicio;
 - calcular una nota automática de `0,0` a `5,0`.
 
 La interacción por consola se conserva como apoyo para las pruebas. La interfaz
-gráfica está en construcción y ya cuenta con el ingreso del estudiante, la
-visualización de las señales y el primer paso del desarrollo guiado.
+gráfica está en construcción y ya permite desarrollar los cuatro pasos
+numéricos del recorrido guiado, con retroalimentación y persistencia después de
+cada interacción.
 
 ## Estructura del repositorio
 
@@ -141,8 +145,9 @@ sesiones ficticias en `session_outputs/`.
 
 ## Límites actuales
 
-Este repositorio no contiene todavía el flujo gráfico completo, la integración
-de voz ni los otros once ejercicios. También falta definir el mecanismo
-definitivo de almacenamiento y la forma de consulta del reporte.
+Este repositorio no contiene todavía el paso final de interpretación dentro de
+la interfaz, la evaluación gráfica integrada, la integración de voz ni los
+otros once ejercicios. También falta definir el mecanismo definitivo de
+almacenamiento y la forma de consulta del reporte.
 
 El código y la documentación se mantienen en un repositorio privado mientras se definen las condiciones institucionales de uso y distribución.

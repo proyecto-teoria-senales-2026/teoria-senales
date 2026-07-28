@@ -52,6 +52,7 @@ class ConvolutionTests(unittest.TestCase):
             with self.subTest(step_id=step_id):
                 self.assertFalse(self.exercise.validate(step_id, "abc"))
                 self.assertFalse(self.exercise.validate(step_id, "1, dos, 3"))
+                self.assertFalse(self.exercise.validate(step_id, "   "))
 
     def test_numeric_steps_accept_common_sequence_formats(self) -> None:
         accepted_answers = {

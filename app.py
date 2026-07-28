@@ -23,11 +23,13 @@ from teoria_senales.app.web_session import (
 )
 from teoria_senales.domain.models import StepStatus
 from teoria_senales.feedback.progressive import feedback_for_attempt
+from teoria_senales.signal_processing.convolution import parse_numeric_sequence
 from teoria_senales.storage.json_repository import JsonSessionRepository
 
 
 SESSION_KEY = "c3_3_tracker"
 HELP_KEY = "c3_3_step_1_help"
+HELP_KEY_PREFIX = "c3_3_help_"
 LEAVE_CONFIRMATION_KEY = "c3_3_leave_confirmation"
 SESSION_PATH_KEY = "c3_3_session_path"
 RECOVERY_PATH_KEY = "c3_3_recovery_path"
@@ -56,8 +58,13 @@ def clear_recovery_state() -> None:
 
 def activate_session(tracker, path: Path | None = None) -> None:
     st.session_state[SESSION_KEY] = tracker
-    step_one = tracker.session.steps["paso_1"]
-    st.session_state[HELP_KEY] = bool(step_one.help_requests)
+    for step_id, step in tracker.session.steps.items():
+        st.session_state[f"{HELP_KEY_PREFIX}{step_id}"] = bool(
+            step.help_requests
+        )
+    st.session_state[HELP_KEY] = bool(
+        tracker.session.steps["paso_1"].help_requests
+    )
     st.session_state[LEAVE_CONFIRMATION_KEY] = False
     if path is None:
         save_active_session()
@@ -338,6 +345,290 @@ def render_step_one(tracker) -> None:
         st.info(definition.hint)
 
 
+def saved_sequence_answer(step) -> str:
+    if not step.attempts:
+        return ""
+
+    answer = step.attempts[-1].answer
+    parsed = parse_numeric_sequence(answer)
+    if parsed is not None:
+        return ", ".join(
+            str(int(value)) if value.is_integer() else str(float(value))
+            for value in parsed
+        )
+    return str(answer)
+
+
+def render_step_two(tracker) -> None:
+    exercise = tracker.exercise
+    step = tracker.session.steps["paso_2"]
+    definition = exercise.get_step("paso_2")
+    completed = step.status == StepStatus.COMPLETED
+    help_key = f"{HELP_KEY_PREFIX}paso_2"
+
+    st.divider()
+    st.progress(0.4, text="Paso 2 de 5 · Convolución lineal")
+    st.subheader("Calcula la convolución lineal")
+    st.write(
+        r"Calcula cada muestra con $y[n]=\sum_k x[k]h[n-k]$. "
+        "Conserva el orden de los índices desde n = 0."
+    )
+    st.caption(
+        "Escribe las cinco muestras separadas por comas, espacios o punto y coma."
+    )
+
+    with st.form("step_two_answer"):
+        answer = st.text_input(
+            "Resultado de la convolución lineal",
+            value=saved_sequence_answer(step),
+            placeholder="Ejemplo de formato: 0, 1, 2, 3, 4",
+            disabled=completed,
+        )
+        submitted = st.form_submit_button(
+            "Verificar convolución lineal",
+            type="primary",
+            width="stretch",
+            disabled=completed,
+        )
+
+    if submitted:
+        if parse_numeric_sequence(answer) is None:
+            st.warning(
+                "Ingresa únicamente valores numéricos separados por comas, "
+                "espacios o punto y coma."
+            )
+        else:
+            correct = exercise.validate("paso_2", answer)
+            attempt_number = len(step.attempts) + 1
+            feedback = feedback_for_attempt(correct, attempt_number)
+            tracker.register_attempt(
+                "paso_2",
+                answer,
+                correct,
+                feedback,
+                definition.difficulty,
+            )
+            save_active_session()
+            if correct:
+                completed = True
+                st.success(feedback)
+            else:
+                st.error(feedback)
+
+    help_column, status_column = st.columns([1, 2])
+    with help_column:
+        if st.button(
+            "Ver orientación del paso 2",
+            width="stretch",
+            disabled=completed,
+        ):
+            tracker.register_help("paso_2", definition.hint)
+            st.session_state[help_key] = True
+            save_active_session()
+    with status_column:
+        if completed:
+            st.success(
+                "Paso 2 completado. La convolución lineal quedó guardada."
+            )
+        elif step.attempts:
+            st.caption(f"Intentos registrados: {len(step.attempts)}")
+
+    if st.session_state.get(help_key, False) and not completed:
+        st.info(definition.hint)
+
+    if completed:
+        st.markdown("#### Resultado comprobado")
+        render_signal_card(
+            np.asarray(exercise.expected_results["convolucion_lineal"]),
+            "y[n]",
+        )
+
+
+def render_step_three(tracker) -> None:
+    exercise = tracker.exercise
+    step = tracker.session.steps["paso_3"]
+    definition = exercise.get_step("paso_3")
+    completed = step.status == StepStatus.COMPLETED
+    help_key = f"{HELP_KEY_PREFIX}paso_3"
+
+    st.divider()
+    st.progress(0.6, text="Paso 3 de 5 · Verificación DFT/FFT con N = 3")
+    st.subheader("Verifica el resultado con N = 3")
+    st.write(
+        r"Calcula $X[k]$ y $H[k]$ con tres puntos, multiplica ambos "
+        r"espectros y aplica la transformada inversa."
+    )
+    st.caption(
+        "Registra las tres muestras obtenidas en el dominio del tiempo."
+    )
+
+    with st.form("step_three_answer"):
+        answer = st.text_input(
+            "Resultado mediante DFT/FFT con N = 3",
+            value=saved_sequence_answer(step),
+            placeholder="Ejemplo de formato: 0, 1, 2",
+            disabled=completed,
+        )
+        submitted = st.form_submit_button(
+            "Verificar resultado con N = 3",
+            type="primary",
+            width="stretch",
+            disabled=completed,
+        )
+
+    if submitted:
+        if parse_numeric_sequence(answer) is None:
+            st.warning(
+                "Ingresa únicamente valores numéricos separados por comas, "
+                "espacios o punto y coma."
+            )
+        else:
+            correct = exercise.validate("paso_3", answer)
+            attempt_number = len(step.attempts) + 1
+            feedback = feedback_for_attempt(correct, attempt_number)
+            tracker.register_attempt(
+                "paso_3",
+                answer,
+                correct,
+                feedback,
+                definition.difficulty,
+            )
+            save_active_session()
+            if correct:
+                completed = True
+                st.success(feedback)
+            else:
+                st.error(feedback)
+
+    help_column, status_column = st.columns([1, 2])
+    with help_column:
+        if st.button(
+            "Ver orientación del paso 3",
+            width="stretch",
+            disabled=completed,
+        ):
+            tracker.register_help("paso_3", definition.hint)
+            st.session_state[help_key] = True
+            save_active_session()
+    with status_column:
+        if completed:
+            st.success(
+                "Paso 3 completado. El resultado con N = 3 quedó guardado."
+            )
+        elif step.attempts:
+            st.caption(f"Intentos registrados: {len(step.attempts)}")
+
+    if st.session_state.get(help_key, False) and not completed:
+        st.info(definition.hint)
+
+    if completed:
+        st.markdown("#### Resultado comprobado")
+        render_signal_card(
+            np.asarray(exercise.expected_results["resultado_N3"]),
+            "y_N=3[n]",
+        )
+        st.caption(
+            "Como N = 3 es menor que la longitud de la convolución lineal, "
+            "este resultado presenta solapamiento circular."
+        )
+
+
+def render_step_four(tracker) -> None:
+    exercise = tracker.exercise
+    step = tracker.session.steps["paso_4"]
+    definition = exercise.get_step("paso_4")
+    completed = step.status == StepStatus.COMPLETED
+    help_key = f"{HELP_KEY_PREFIX}paso_4"
+
+    st.divider()
+    st.progress(0.8, text="Paso 4 de 5 · Verificación DFT/FFT con N = 5")
+    st.subheader("Verifica el resultado con N = 5")
+    st.write(
+        "Completa ambas señales con ceros hasta cinco muestras. Luego calcula "
+        r"$X[k]$, $H[k]$, su producto y la transformada inversa."
+    )
+    st.caption(
+        "Registra las cinco muestras obtenidas en el dominio del tiempo."
+    )
+
+    with st.form("step_four_answer"):
+        answer = st.text_input(
+            "Resultado mediante DFT/FFT con N = 5",
+            value=saved_sequence_answer(step),
+            placeholder="Ejemplo de formato: 0, 1, 2, 3, 4",
+            disabled=completed,
+        )
+        submitted = st.form_submit_button(
+            "Verificar resultado con N = 5",
+            type="primary",
+            width="stretch",
+            disabled=completed,
+        )
+
+    if submitted:
+        if parse_numeric_sequence(answer) is None:
+            st.warning(
+                "Ingresa únicamente valores numéricos separados por comas, "
+                "espacios o punto y coma."
+            )
+        else:
+            correct = exercise.validate("paso_4", answer)
+            attempt_number = len(step.attempts) + 1
+            feedback = feedback_for_attempt(correct, attempt_number)
+            tracker.register_attempt(
+                "paso_4",
+                answer,
+                correct,
+                feedback,
+                definition.difficulty,
+            )
+            save_active_session()
+            if correct:
+                completed = True
+                st.success(feedback)
+            else:
+                st.error(feedback)
+
+    help_column, status_column = st.columns([1, 2])
+    with help_column:
+        if st.button(
+            "Ver orientación del paso 4",
+            width="stretch",
+            disabled=completed,
+        ):
+            tracker.register_help("paso_4", definition.hint)
+            st.session_state[help_key] = True
+            save_active_session()
+    with status_column:
+        if completed:
+            st.success(
+                "Paso 4 completado. El resultado con N = 5 quedó guardado."
+            )
+        elif step.attempts:
+            st.caption(f"Intentos registrados: {len(step.attempts)}")
+
+    if st.session_state.get(help_key, False) and not completed:
+        st.info(definition.hint)
+
+    if completed:
+        st.markdown("#### Comparación de resultados")
+        linear_column, fft_column = st.columns(2)
+        with linear_column:
+            render_signal_card(
+                np.asarray(exercise.expected_results["convolucion_lineal"]),
+                "y[n] lineal",
+            )
+        with fft_column:
+            render_signal_card(
+                np.asarray(exercise.expected_results["resultado_N5"]),
+                "y_N=5[n]",
+            )
+        st.success(
+            "Con N = 5 no hay solapamiento circular: el resultado coincide "
+            "con la convolución lineal."
+        )
+
+
 def render_active_session() -> None:
     tracker = st.session_state[SESSION_KEY]
     session = tracker.session
@@ -349,6 +640,12 @@ def render_active_session() -> None:
     st.title("Convolución de señales discretas")
     st.caption(f"Código estudiantil: {session.student_id}")
     render_step_one(tracker)
+    if session.steps["paso_1"].status == StepStatus.COMPLETED:
+        render_step_two(tracker)
+    if session.steps["paso_2"].status == StepStatus.COMPLETED:
+        render_step_three(tracker)
+    if session.steps["paso_3"].status == StepStatus.COMPLETED:
+        render_step_four(tracker)
 
     if not st.session_state.get(LEAVE_CONFIRMATION_KEY, False):
         if st.button("Volver al inicio"):
@@ -379,6 +676,8 @@ def render_active_session() -> None:
             SESSION_PATH_KEY,
         ):
             st.session_state.pop(key, None)
+        for step_id in tracker.session.steps:
+            st.session_state.pop(f"{HELP_KEY_PREFIX}{step_id}", None)
         st.rerun()
     elif cancel:
         st.session_state[LEAVE_CONFIRMATION_KEY] = False

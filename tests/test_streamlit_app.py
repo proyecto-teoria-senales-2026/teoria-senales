@@ -166,6 +166,253 @@ class StreamlitAppTests(unittest.TestCase):
         self.assertEqual(len(step.attempts), 2)
         self.assertTrue(step.attempts[-1].correct)
 
+    def test_second_step_registers_attempts_help_and_correct_result(self) -> None:
+        app = self.create_app()
+        app.text_input[0].set_value("PASO2-001")
+        app.button[0].click()
+        app.run(timeout=10)
+
+        app.number_input[0].set_value(3)
+        app.number_input[1].set_value(3)
+        app.number_input[2].set_value(5)
+        self.find_button(app, "Verificar respuesta").click()
+        app.run(timeout=10)
+
+        self.assertEqual(
+            [text_input.label for text_input in app.text_input],
+            ["Resultado de la convolución lineal"],
+        )
+        app.text_input[0].set_value("1, 1, 1, 3, 0")
+        self.find_button(app, "Verificar convolución lineal").click()
+        app.run(timeout=10)
+
+        tracker = app.session_state["c3_3_tracker"]
+        step = tracker.session.steps["paso_2"]
+        self.assertEqual(len(step.attempts), 1)
+        self.assertFalse(step.attempts[0].correct)
+        self.assertEqual(step.corrections, 1)
+
+        self.find_button(app, "Ver orientación del paso 2").click()
+        app.run(timeout=10)
+        tracker = app.session_state["c3_3_tracker"]
+        step = tracker.session.steps["paso_2"]
+        self.assertEqual(len(step.help_requests), 1)
+        self.assertTrue(
+            any(
+                "productos muestra por muestra" in info.value
+                for info in app.info
+            )
+        )
+
+        app.text_input[0].set_value("[1; 1; 1; 3; 2]")
+        self.find_button(app, "Verificar convolución lineal").click()
+        app.run(timeout=10)
+
+        self.assertFalse(app.exception)
+        tracker = app.session_state["c3_3_tracker"]
+        step = tracker.session.steps["paso_2"]
+        self.assertEqual(len(step.attempts), 2)
+        self.assertTrue(step.attempts[-1].correct)
+        self.assertTrue(
+            any("Paso 2 completado" in message.value for message in app.success)
+        )
+        self.assertTrue(
+            any("y[n]" in markdown.value for markdown in app.markdown)
+        )
+
+    def test_second_step_rejects_non_numeric_text_without_registering_it(self) -> None:
+        app = self.create_app()
+        app.text_input[0].set_value("PASO2-TEXTO")
+        app.button[0].click()
+        app.run(timeout=10)
+
+        app.number_input[0].set_value(3)
+        app.number_input[1].set_value(3)
+        app.number_input[2].set_value(5)
+        self.find_button(app, "Verificar respuesta").click()
+        app.run(timeout=10)
+
+        app.text_input[0].set_value("abc")
+        self.find_button(app, "Verificar convolución lineal").click()
+        app.run(timeout=10)
+
+        self.assertFalse(app.exception)
+        self.assertTrue(
+            any("únicamente valores numéricos" in warning.value for warning in app.warning)
+        )
+        tracker = app.session_state["c3_3_tracker"]
+        self.assertEqual(len(tracker.session.steps["paso_2"].attempts), 0)
+
+    def test_third_step_registers_fft_result_and_circular_warning(self) -> None:
+        app = self.create_app()
+        app.text_input[0].set_value("PASO3-001")
+        app.button[0].click()
+        app.run(timeout=10)
+
+        app.number_input[0].set_value(3)
+        app.number_input[1].set_value(3)
+        app.number_input[2].set_value(5)
+        self.find_button(app, "Verificar respuesta").click()
+        app.run(timeout=10)
+
+        app.text_input[-1].set_value("1 1 1 3 2")
+        self.find_button(app, "Verificar convolución lineal").click()
+        app.run(timeout=10)
+
+        self.assertEqual(
+            app.text_input[-1].label,
+            "Resultado mediante DFT/FFT con N = 3",
+        )
+        app.text_input[-1].set_value("4, 3, 0")
+        self.find_button(app, "Verificar resultado con N = 3").click()
+        app.run(timeout=10)
+
+        tracker = app.session_state["c3_3_tracker"]
+        step = tracker.session.steps["paso_3"]
+        self.assertEqual(len(step.attempts), 1)
+        self.assertFalse(step.attempts[0].correct)
+
+        self.find_button(app, "Ver orientación del paso 3").click()
+        app.run(timeout=10)
+        tracker = app.session_state["c3_3_tracker"]
+        step = tracker.session.steps["paso_3"]
+        self.assertEqual(len(step.help_requests), 1)
+        self.assertTrue(
+            any("solapamiento circular" in info.value for info in app.info)
+        )
+
+        app.text_input[-1].set_value("(4; 3; 1)")
+        self.find_button(app, "Verificar resultado con N = 3").click()
+        app.run(timeout=10)
+
+        self.assertFalse(app.exception)
+        tracker = app.session_state["c3_3_tracker"]
+        step = tracker.session.steps["paso_3"]
+        self.assertEqual(len(step.attempts), 2)
+        self.assertTrue(step.attempts[-1].correct)
+        self.assertTrue(
+            any("Paso 3 completado" in message.value for message in app.success)
+        )
+        self.assertTrue(
+            any("solapamiento circular" in caption.value for caption in app.caption)
+        )
+
+    def test_fourth_step_confirms_zero_padding_result(self) -> None:
+        app = self.create_app()
+        app.text_input[0].set_value("PASO4-001")
+        app.button[0].click()
+        app.run(timeout=10)
+
+        app.number_input[0].set_value(3)
+        app.number_input[1].set_value(3)
+        app.number_input[2].set_value(5)
+        self.find_button(app, "Verificar respuesta").click()
+        app.run(timeout=10)
+
+        app.text_input[-1].set_value("1 1 1 3 2")
+        self.find_button(app, "Verificar convolución lineal").click()
+        app.run(timeout=10)
+        app.text_input[-1].set_value("4 3 1")
+        self.find_button(app, "Verificar resultado con N = 3").click()
+        app.run(timeout=10)
+
+        self.assertEqual(
+            app.text_input[-1].label,
+            "Resultado mediante DFT/FFT con N = 5",
+        )
+        app.text_input[-1].set_value("1, 1, 1, 3, 0")
+        self.find_button(app, "Verificar resultado con N = 5").click()
+        app.run(timeout=10)
+
+        tracker = app.session_state["c3_3_tracker"]
+        step = tracker.session.steps["paso_4"]
+        self.assertEqual(len(step.attempts), 1)
+        self.assertFalse(step.attempts[0].correct)
+
+        self.find_button(app, "Ver orientación del paso 4").click()
+        app.run(timeout=10)
+        tracker = app.session_state["c3_3_tracker"]
+        step = tracker.session.steps["paso_4"]
+        self.assertEqual(len(step.help_requests), 1)
+        self.assertTrue(
+            any("cinco muestras" in info.value for info in app.info)
+        )
+
+        app.text_input[-1].set_value("{1; 1; 1; 3; 2}")
+        self.find_button(app, "Verificar resultado con N = 5").click()
+        app.run(timeout=10)
+
+        self.assertFalse(app.exception)
+        tracker = app.session_state["c3_3_tracker"]
+        step = tracker.session.steps["paso_4"]
+        self.assertEqual(len(step.attempts), 2)
+        self.assertTrue(step.attempts[-1].correct)
+        self.assertTrue(
+            any("Paso 4 completado" in message.value for message in app.success)
+        )
+        self.assertTrue(
+            any(
+                "coincide con la convolución lineal" in message.value
+                for message in app.success
+            )
+        )
+
+    def test_recovery_restores_the_guided_steps(self) -> None:
+        first_app = self.create_app()
+        first_app.text_input[0].set_value("RECUPERAR-GUIADO")
+        first_app.button[0].click()
+        first_app.run(timeout=10)
+
+        first_app.number_input[0].set_value(3)
+        first_app.number_input[1].set_value(3)
+        first_app.number_input[2].set_value(5)
+        self.find_button(first_app, "Verificar respuesta").click()
+        first_app.run(timeout=10)
+
+        first_app.text_input[-1].set_value("1 1 1 3 2")
+        self.find_button(first_app, "Verificar convolución lineal").click()
+        first_app.run(timeout=10)
+
+        first_app.text_input[-1].set_value("4 3 0")
+        self.find_button(first_app, "Verificar resultado con N = 3").click()
+        first_app.run(timeout=10)
+        self.find_button(first_app, "Ver orientación del paso 3").click()
+        first_app.run(timeout=10)
+        first_app.text_input[-1].set_value("4 3 1")
+        self.find_button(first_app, "Verificar resultado con N = 3").click()
+        first_app.run(timeout=10)
+
+        first_app.text_input[-1].set_value("1 1 1 3 2")
+        self.find_button(first_app, "Verificar resultado con N = 5").click()
+        first_app.run(timeout=10)
+        original_id = first_app.session_state["c3_3_tracker"].session.session_id
+
+        recovered_app = self.create_app()
+        recovered_app.text_input[0].set_value("RECUPERAR-GUIADO")
+        recovered_app.button[0].click()
+        recovered_app.run(timeout=10)
+        self.find_button(recovered_app, "Continuar sesión").click()
+        recovered_app.run(timeout=10)
+
+        self.assertFalse(recovered_app.exception)
+        tracker = recovered_app.session_state["c3_3_tracker"]
+        self.assertEqual(tracker.session.session_id, original_id)
+        self.assertEqual(
+            [text_input.value for text_input in recovered_app.text_input],
+            ["1, 1, 1, 3, 2", "4, 3, 1", "1, 1, 1, 3, 2"],
+        )
+        self.assertTrue(
+            all(text_input.disabled for text_input in recovered_app.text_input)
+        )
+        self.assertEqual(
+            len(tracker.session.steps["paso_3"].attempts),
+            2,
+        )
+        self.assertEqual(
+            len(tracker.session.steps["paso_3"].help_requests),
+            1,
+        )
+
     def test_return_to_start_requires_confirmation(self) -> None:
         app = self.create_app()
         app.text_input[0].set_value("SALIDA-001")

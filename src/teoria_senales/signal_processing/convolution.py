@@ -59,7 +59,11 @@ def parse_numeric_sequence(value: Any) -> NDArray[np.float64] | None:
     except (TypeError, ValueError):
         return None
 
-    if values.ndim != 1 or not np.all(np.isfinite(values)):
+    if (
+        values.ndim != 1
+        or values.size == 0
+        or not np.all(np.isfinite(values))
+    ):
         return None
     return values
 
