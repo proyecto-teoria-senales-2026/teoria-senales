@@ -21,16 +21,29 @@ El desarrollo permite:
 - verificar el resultado mediante DFT/FFT con `N = 3` y `N = 5`;
 - validar cuatro pasos numéricos sin anticipar la respuesta completa;
 - registrar intentos, correcciones y ayudas consultadas;
+- iniciar una sesión desde una interfaz gráfica con el código estudiantil;
+- guardar la sesión desde el inicio y después de cada interacción;
+- conservar intentos separados aunque se repita el código estudiantil;
+- recuperar la última sesión incompleta o iniciar voluntariamente un nuevo
+  intento;
+- validar el código estudiantil con reglas técnicas de longitud y caracteres,
+  sin asumir un formato institucional;
+- visualizar las señales de entrada del C3-3 como secuencias y gráficas discretas;
+- desarrollar y verificar el reconocimiento de longitudes desde la interfaz;
+- calificar automáticamente cuatro preguntas sobre nueve puntos;
 - guardar la sesión en un archivo JSON;
 - generar un reporte PDF por estudiante y ejercicio;
-- dejar las respuestas interpretativas para revisión del docente.
+- calcular una nota automática de `0,0` a `5,0`.
 
-La interacción por consola es provisional. Su propósito es comprobar que el procesamiento, la validación, el seguimiento y la generación del reporte funcionan de forma independiente antes de definir la interfaz gráfica definitiva.
+La interacción por consola se conserva como apoyo para las pruebas. La interfaz
+gráfica está en construcción y ya cuenta con el ingreso del estudiante, la
+visualización de las señales y el primer paso del desarrollo guiado.
 
 ## Estructura del repositorio
 
 ```text
 software-interactivo-teoria-senales/
+├── app.py                  # entrada de la interfaz Streamlit
 ├── main.py
 ├── requirements.txt
 ├── src/teoria_senales/
@@ -49,6 +62,9 @@ software-interactivo-teoria-senales/
 ## Instalación
 
 Se requiere Python 3.11 o una versión posterior.
+
+El entorno `.venv` es local y no debe copiarse de otro computador. En el equipo
+que se usará para la presentación se crea nuevamente con:
 
 ```bash
 python -m venv .venv
@@ -70,9 +86,22 @@ Después se instalan las dependencias:
 
 ```bash
 python -m pip install -r requirements.txt
+python -m pip check
 ```
 
+El último comando debe responder `No broken requirements found.` antes de abrir
+la aplicación.
+
 ## Ejecución
+
+Para abrir la interfaz gráfica:
+
+```bash
+python -m streamlit run app.py
+```
+
+La aplicación se abre en el navegador. Si no se abre automáticamente, se puede
+ingresar a `http://localhost:8501`.
 
 Para generar una sesión de demostración con datos ficticios:
 
@@ -88,13 +117,20 @@ python main.py
 
 Los archivos generados durante la ejecución se guardan en `demo_outputs/`. Esta carpeta no se publica porque puede contener información de sesiones de prueba.
 
+Las sesiones iniciadas desde la interfaz se guardan en `session_outputs/`.
+Cada intento utiliza un identificador propio para evitar que un archivo anterior
+sea reemplazado.
+
 ## Pruebas
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-Las pruebas verifican los resultados numéricos de referencia, la validación de longitudes y la generación de los archivos JSON y PDF.
+Las pruebas verifican los resultados numéricos de referencia, la evaluación
+automática, el inicio de la sesión desde la interfaz y la generación de los
+archivos JSON y PDF. Las pruebas de interfaz usan carpetas temporales y no dejan
+sesiones ficticias en `session_outputs/`.
 
 ## Documentación
 
@@ -105,6 +141,8 @@ Las pruebas verifican los resultados numéricos de referencia, la validación de
 
 ## Límites actuales
 
-Este repositorio no contiene todavía la interfaz gráfica final, la integración de voz ni los otros once ejercicios. También falta definir el mecanismo definitivo de almacenamiento, la forma de consulta del reporte y el nivel de automatización de los criterios interpretativos.
+Este repositorio no contiene todavía el flujo gráfico completo, la integración
+de voz ni los otros once ejercicios. También falta definir el mecanismo
+definitivo de almacenamiento y la forma de consulta del reporte.
 
 El código y la documentación se mantienen en un repositorio privado mientras se definen las condiciones institucionales de uso y distribución.
