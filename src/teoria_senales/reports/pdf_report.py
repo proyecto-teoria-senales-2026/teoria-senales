@@ -38,6 +38,11 @@ LIGHT_BLUE = colors.HexColor("#EAF1F8")
 LIGHT_GRAY = colors.HexColor("#F3F4F6")
 REGULAR_FONT = "Vera"
 BOLD_FONT = "Vera-Bold"
+HEADER_IMAGE = (
+    Path(__file__).resolve().parents[1]
+    / "assets"
+    / "encabezado_institucional.png"
+)
 
 
 def _register_fonts() -> None:
@@ -166,7 +171,7 @@ def generate_pdf_report(session: SessionRecord, output_directory: str | Path) ->
         pagesize=A4,
         rightMargin=1.7 * cm,
         leftMargin=1.7 * cm,
-        topMargin=1.5 * cm,
+        topMargin=3.1 * cm,
         bottomMargin=1.5 * cm,
         title=f"Reporte de seguimiento - {session.exercise_id}",
         author="Proyecto Teoría de Señales",
@@ -272,7 +277,7 @@ def generate_pdf_report(session: SessionRecord, output_directory: str | Path) ->
             ]
         )
     )
-    chart = Image(_results_figure(session), width=15.5 * cm, height=10.0 * cm)
+    chart = Image(_results_figure(session), width=15.5 * cm, height=8.7 * cm)
     story.extend([result_table, Spacer(1, 8), chart, PageBreak()])
 
     story.append(Paragraph("Interpretación del estudiante", styles["Section"]))
@@ -338,13 +343,23 @@ def generate_pdf_report(session: SessionRecord, output_directory: str | Path) ->
             )
         )
 
-    def add_footer(canvas: object, doc: object) -> None:
+    def add_page_chrome(canvas: object, doc: object) -> None:
         canvas.saveState()
+        header_height = A4[0] * 108 / 838
+        canvas.drawImage(
+            str(HEADER_IMAGE),
+            0,
+            A4[1] - header_height,
+            width=A4[0],
+            height=header_height,
+            preserveAspectRatio=False,
+            mask="auto",
+        )
         canvas.setFont(REGULAR_FONT, 7.5)
         canvas.setFillColor(colors.HexColor("#667085"))
         canvas.drawString(1.7 * cm, 0.8 * cm, "Proyecto Teoría de Señales")
         canvas.drawRightString(A4[0] - 1.7 * cm, 0.8 * cm, f"Página {doc.page}")
         canvas.restoreState()
 
-    document.build(story, onFirstPage=add_footer, onLaterPages=add_footer)
+    document.build(story, onFirstPage=add_page_chrome, onLaterPages=add_page_chrome)
     return destination
