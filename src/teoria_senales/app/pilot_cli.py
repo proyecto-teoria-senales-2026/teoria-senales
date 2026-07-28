@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Callable
 
+from teoria_senales.evaluation.autograding import evaluate_c3_3
 from teoria_senales.exercises.convolution_pilot import ConvolutionPilot
 from teoria_senales.feedback.progressive import feedback_for_attempt
 from teoria_senales.reports.pdf_report import generate_pdf_report
@@ -160,6 +161,15 @@ def run_demo(output_directory: str | Path) -> tuple[Path, Path]:
             "que Lx + Lh - 1, el procedimiento mediante DFT/FFT reproduce la convolución lineal."
         ),
     )
+    evaluation = evaluate_c3_3(
+        {
+            "P1": [1, 1, 1, 3, 2],
+            "P2": [4, 3, 1],
+            "P3": "c",
+            "P4": True,
+        }
+    )
+    tracker.record_evaluation(evaluation)
     session = tracker.complete(exercise.expected_results)
     repository = JsonSessionRepository(output_directory)
     return repository.save(session), generate_pdf_report(session, output_directory)
