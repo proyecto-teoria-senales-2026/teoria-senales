@@ -118,6 +118,18 @@ class StreamlitAppTests(unittest.TestCase):
         step = tracker.session.steps["paso_1"]
         self.assertEqual(len(step.attempts), 1)
         self.assertTrue(step.attempts[0].correct)
+        verify_button = self.find_button(app, "Verificar respuesta")
+        self.assertTrue(verify_button.disabled)
+        verify_button.click()
+        app.run(timeout=10)
+        self.assertEqual(
+            len(
+                app.session_state["c3_3_tracker"]
+                .session.steps["paso_1"]
+                .attempts
+            ),
+            1,
+        )
 
     def test_incomplete_answer_is_not_registered(self) -> None:
         app = self.create_app()
@@ -219,6 +231,18 @@ class StreamlitAppTests(unittest.TestCase):
         self.assertTrue(
             any("y[n]" in markdown.value for markdown in app.markdown)
         )
+        verify_button = self.find_button(app, "Verificar convolución lineal")
+        self.assertTrue(verify_button.disabled)
+        verify_button.click()
+        app.run(timeout=10)
+        self.assertEqual(
+            len(
+                app.session_state["c3_3_tracker"]
+                .session.steps["paso_2"]
+                .attempts
+            ),
+            2,
+        )
 
     def test_second_step_rejects_non_numeric_text_without_registering_it(self) -> None:
         app = self.create_app()
@@ -296,6 +320,18 @@ class StreamlitAppTests(unittest.TestCase):
         self.assertTrue(
             any("solapamiento circular" in caption.value for caption in app.caption)
         )
+        verify_button = self.find_button(app, "Verificar resultado con N = 3")
+        self.assertTrue(verify_button.disabled)
+        verify_button.click()
+        app.run(timeout=10)
+        self.assertEqual(
+            len(
+                app.session_state["c3_3_tracker"]
+                .session.steps["paso_3"]
+                .attempts
+            ),
+            2,
+        )
 
     def test_fourth_step_confirms_zero_padding_result(self) -> None:
         app = self.create_app()
@@ -355,6 +391,18 @@ class StreamlitAppTests(unittest.TestCase):
                 "coincide con la convolución lineal" in message.value
                 for message in app.success
             )
+        )
+        verify_button = self.find_button(app, "Verificar resultado con N = 5")
+        self.assertTrue(verify_button.disabled)
+        verify_button.click()
+        app.run(timeout=10)
+        self.assertEqual(
+            len(
+                app.session_state["c3_3_tracker"]
+                .session.steps["paso_4"]
+                .attempts
+            ),
+            2,
         )
 
     def test_recovery_restores_the_guided_steps(self) -> None:

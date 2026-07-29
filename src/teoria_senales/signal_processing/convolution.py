@@ -9,6 +9,9 @@ import numpy as np
 from numpy.typing import ArrayLike, NDArray
 
 
+NUMERIC_TOLERANCE = 1e-6
+
+
 def linear_convolution(x: ArrayLike, h: ArrayLike) -> NDArray[np.float64]:
     """Calcula la convolución lineal de dos secuencias finitas."""
 
@@ -68,7 +71,11 @@ def parse_numeric_sequence(value: Any) -> NDArray[np.float64] | None:
     return values
 
 
-def values_match(answer: Any, expected: ArrayLike, tolerance: float = 1e-9) -> bool:
+def values_match(
+    answer: Any,
+    expected: ArrayLike,
+    tolerance: float = NUMERIC_TOLERANCE,
+) -> bool:
     """Compara dos secuencias considerando longitud y tolerancia numérica."""
 
     answer_array = parse_numeric_sequence(answer)

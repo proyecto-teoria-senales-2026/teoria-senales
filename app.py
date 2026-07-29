@@ -307,7 +307,7 @@ def render_step_one(tracker) -> None:
             disabled=completed,
         )
 
-    if submitted:
+    if submitted and not completed:
         if None in (lx, lh, ly):
             st.warning("Completa las tres longitudes antes de verificar.")
         else:
@@ -324,8 +324,7 @@ def render_step_one(tracker) -> None:
             )
             save_active_session()
             if correct:
-                completed = True
-                st.success(feedback)
+                st.rerun()
             else:
                 st.error(feedback)
 
@@ -391,7 +390,7 @@ def render_step_two(tracker) -> None:
             disabled=completed,
         )
 
-    if submitted:
+    if submitted and not completed:
         if parse_numeric_sequence(answer) is None:
             st.warning(
                 "Ingresa únicamente valores numéricos separados por comas, "
@@ -410,8 +409,7 @@ def render_step_two(tracker) -> None:
             )
             save_active_session()
             if correct:
-                completed = True
-                st.success(feedback)
+                st.rerun()
             else:
                 st.error(feedback)
 
@@ -476,7 +474,7 @@ def render_step_three(tracker) -> None:
             disabled=completed,
         )
 
-    if submitted:
+    if submitted and not completed:
         if parse_numeric_sequence(answer) is None:
             st.warning(
                 "Ingresa únicamente valores numéricos separados por comas, "
@@ -495,8 +493,7 @@ def render_step_three(tracker) -> None:
             )
             save_active_session()
             if correct:
-                completed = True
-                st.success(feedback)
+                st.rerun()
             else:
                 st.error(feedback)
 
@@ -565,7 +562,7 @@ def render_step_four(tracker) -> None:
             disabled=completed,
         )
 
-    if submitted:
+    if submitted and not completed:
         if parse_numeric_sequence(answer) is None:
             st.warning(
                 "Ingresa únicamente valores numéricos separados por comas, "
@@ -584,8 +581,7 @@ def render_step_four(tracker) -> None:
             )
             save_active_session()
             if correct:
-                completed = True
-                st.success(feedback)
+                st.rerun()
             else:
                 st.error(feedback)
 

@@ -57,6 +57,9 @@ class SessionTracker:
         difficulty: str,
     ) -> AttemptRecord:
         step = self.session.steps[step_id]
+        if step.status == StepStatus.COMPLETED:
+            return step.attempts[-1]
+
         attempt = AttemptRecord(
             number=len(step.attempts) + 1,
             answer=answer,

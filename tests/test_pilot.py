@@ -65,6 +65,40 @@ class ConvolutionTests(unittest.TestCase):
             with self.subTest(step_id=step_id, answer=answer):
                 self.assertTrue(self.exercise.validate(step_id, answer))
 
+    def test_numeric_steps_and_evaluation_use_the_same_tolerance(self) -> None:
+        accepted_answer = "4.0000005, 3, 1"
+        rejected_answer = "4.000002, 3, 1"
+
+        self.assertTrue(self.exercise.validate("paso_3", accepted_answer))
+        self.assertFalse(self.exercise.validate("paso_3", rejected_answer))
+        self.assertTrue(
+            evaluate_c3_3({"P2": accepted_answer}).questions[1].correct
+        )
+        self.assertFalse(
+            evaluate_c3_3({"P2": rejected_answer}).questions[1].correct
+        )
+
+    def test_completed_step_does_not_register_a_duplicate_attempt(self) -> None:
+        tracker = SessionTracker("Ana", "EST-003", self.exercise)
+        definition = self.exercise.get_step("paso_2")
+        first_attempt = tracker.register_attempt(
+            "paso_2",
+            "1, 1, 1, 3, 2",
+            True,
+            "Respuesta correcta.",
+            definition.difficulty,
+        )
+        repeated_attempt = tracker.register_attempt(
+            "paso_2",
+            "1, 1, 1, 3, 2",
+            True,
+            "Respuesta correcta.",
+            definition.difficulty,
+        )
+
+        self.assertIs(repeated_attempt, first_attempt)
+        self.assertEqual(len(tracker.session.steps["paso_2"].attempts), 1)
+
     def test_demo_generates_structured_session_and_pdf(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             json_path, pdf_path = run_demo(temporary_directory)

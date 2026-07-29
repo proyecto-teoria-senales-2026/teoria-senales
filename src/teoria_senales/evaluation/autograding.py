@@ -6,10 +6,11 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 
-import numpy as np
-
 from teoria_senales.exercises.convolution_pilot import ConvolutionPilot
-from teoria_senales.signal_processing.convolution import parse_numeric_sequence
+from teoria_senales.signal_processing.convolution import (
+    NUMERIC_TOLERANCE,
+    values_match,
+)
 
 
 class QuestionType(str, Enum):
@@ -32,7 +33,7 @@ class QuestionDefinition:
     rae_id: str
     expected_answer: Any
     options: tuple[tuple[str, str], ...] = ()
-    tolerance: float = 1e-6
+    tolerance: float = NUMERIC_TOLERANCE
 
 
 @dataclass(frozen=True)
@@ -160,19 +161,10 @@ def _parse_boolean(answer: Any) -> bool | None:
 
 def _is_correct(question: QuestionDefinition, answer: Any) -> bool:
     if question.question_type == QuestionType.NUMERIC:
-        received = parse_numeric_sequence(answer)
-        expected = np.asarray(question.expected_answer, dtype=float)
-        return (
-            received is not None
-            and received.shape == expected.shape
-            and bool(
-                np.allclose(
-                    received,
-                    expected,
-                    atol=question.tolerance,
-                    rtol=0.0,
-                )
-            )
+        return values_match(
+            answer,
+            question.expected_answer,
+            tolerance=question.tolerance,
         )
     if question.question_type == QuestionType.MULTIPLE_CHOICE:
         return (
