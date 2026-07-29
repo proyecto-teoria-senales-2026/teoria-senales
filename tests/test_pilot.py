@@ -99,6 +99,17 @@ class ConvolutionTests(unittest.TestCase):
         self.assertIs(repeated_attempt, first_attempt)
         self.assertEqual(len(tracker.session.steps["paso_2"].attempts), 1)
 
+    def test_same_orientation_is_registered_only_once(self) -> None:
+        tracker = SessionTracker("Ana", "EST-004", self.exercise)
+        hint = self.exercise.get_step("paso_3").hint
+
+        tracker.register_help("paso_3", hint)
+        tracker.register_help("paso_3", hint)
+
+        step = tracker.session.steps["paso_3"]
+        self.assertEqual(step.help_requests, [hint])
+        self.assertEqual(step.status.value, "en_proceso")
+
     def test_demo_generates_structured_session_and_pdf(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
             json_path, pdf_path = run_demo(temporary_directory)

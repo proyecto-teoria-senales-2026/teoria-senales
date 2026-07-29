@@ -46,6 +46,13 @@ Este documento deja por escrito qué se mantiene del planteamiento aprobado, qu�
   nueve y nota automática de `0,0` a `5,0`.
 - Cierre de la sesión al enviar la evaluación, con una sola evidencia por
   pregunta y resultado por criterio.
+- Presentación de un solo paso activo, con los pasos terminados organizados en
+  resúmenes plegables.
+- Ocultamiento de resultados y explicaciones del recorrido guiado mientras la
+  evaluación está activa.
+- Revisión de las cuatro respuestas antes de confirmar la calificación.
+- Registro de una sola consulta por orientación, aunque el control se active
+  nuevamente.
 - Recuperación en pantalla de las respuestas, intentos y ayudas de los cuatro
   pasos numéricos.
 - Configuración única de las señales y los resultados esperados del C3-3.

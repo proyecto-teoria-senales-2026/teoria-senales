@@ -38,6 +38,16 @@ LEAVE_CONFIRMATION_KEY = "c3_3_leave_confirmation"
 SESSION_PATH_KEY = "c3_3_session_path"
 RECOVERY_PATH_KEY = "c3_3_recovery_path"
 RECOVERY_CODE_KEY = "c3_3_recovery_code"
+EVALUATION_STARTED_KEY = "c3_3_evaluation_started"
+EVALUATION_REVIEW_KEY = "c3_3_evaluation_review"
+EVALUATION_DRAFT_KEY = "c3_3_evaluation_draft"
+GUIDED_STEP_IDS = ("paso_1", "paso_2", "paso_3", "paso_4")
+STEP_TITLES = {
+    "paso_1": "Reconocimiento de las señales",
+    "paso_2": "Convolución lineal",
+    "paso_3": "Verificación DFT/FFT con N = 3",
+    "paso_4": "Verificación DFT/FFT con N = 5",
+}
 HEADER_IMAGE = SRC / "teoria_senales" / "assets" / "encabezado_institucional.png"
 SESSION_DIRECTORY = Path(
     os.environ.get(
@@ -60,6 +70,10 @@ def clear_recovery_state() -> None:
     st.session_state.pop(RECOVERY_CODE_KEY, None)
 
 
+def start_final_evaluation() -> None:
+    st.session_state[EVALUATION_STARTED_KEY] = True
+
+
 def activate_session(tracker, path: Path | None = None) -> None:
     st.session_state[SESSION_KEY] = tracker
     for step_id, step in tracker.session.steps.items():
@@ -70,6 +84,11 @@ def activate_session(tracker, path: Path | None = None) -> None:
         tracker.session.steps["paso_1"].help_requests
     )
     st.session_state[LEAVE_CONFIRMATION_KEY] = False
+    st.session_state[EVALUATION_STARTED_KEY] = (
+        tracker.session.evaluation is not None
+    )
+    st.session_state[EVALUATION_REVIEW_KEY] = False
+    st.session_state.pop(EVALUATION_DRAFT_KEY, None)
     if path is None:
         save_active_session()
     else:
@@ -127,6 +146,11 @@ def apply_styles() -> None:
 def format_sequence(values: np.ndarray) -> str:
     samples = [int(value) if value.is_integer() else float(value) for value in values]
     return str(samples)
+
+
+def format_attempt_count(count: int) -> str:
+    label = "intento registrado" if count == 1 else "intentos registrados"
+    return f"{count} {label}"
 
 
 def create_signal_figure(values: np.ndarray, signal_name: str) -> plt.Figure:
@@ -275,11 +299,12 @@ def render_step_one(tracker) -> None:
     )
 
     completed = step.status == StepStatus.COMPLETED
+    help_requested = bool(step.help_requests)
     with st.form("step_one_answer"):
         lx_column, lh_column, ly_column = st.columns(3)
         with lx_column:
             lx = st.number_input(
-                "Lx",
+                r"$L_x$",
                 min_value=1,
                 step=1,
                 value=saved_values[0],
@@ -288,7 +313,7 @@ def render_step_one(tracker) -> None:
             )
         with lh_column:
             lh = st.number_input(
-                "Lh",
+                r"$L_h$",
                 min_value=1,
                 step=1,
                 value=saved_values[1],
@@ -297,7 +322,7 @@ def render_step_one(tracker) -> None:
             )
         with ly_column:
             ly = st.number_input(
-                "Ly",
+                r"$L_y$",
                 min_value=1,
                 step=1,
                 value=saved_values[2],
@@ -334,17 +359,24 @@ def render_step_one(tracker) -> None:
 
     help_column, status_column = st.columns([1, 2])
     with help_column:
-        if st.button("Ver orientación", width="stretch", disabled=completed):
+        if st.button(
+            "Ver orientación",
+            width="stretch",
+            disabled=completed or help_requested,
+        ):
             tracker.register_help("paso_1", definition.hint)
             st.session_state[HELP_KEY] = True
             save_active_session()
+            st.rerun()
     with status_column:
         if completed:
             st.success("Paso 1 completado. El resultado quedó guardado en la sesión.")
         elif step.attempts:
-            st.caption(f"Intentos registrados: {len(step.attempts)}")
+            st.caption(format_attempt_count(len(step.attempts)))
 
-    if st.session_state.get(HELP_KEY, False) and not completed:
+    if (
+        st.session_state.get(HELP_KEY, False) or help_requested
+    ) and not completed:
         st.info(definition.hint)
 
 
@@ -362,12 +394,63 @@ def saved_sequence_answer(step) -> str:
     return str(answer)
 
 
+def render_completed_step_summary(
+    tracker,
+    step_id: str,
+    reveal_result: bool,
+) -> None:
+    step = tracker.session.steps[step_id]
+    step_number = GUIDED_STEP_IDS.index(step_id) + 1
+    title = STEP_TITLES[step_id]
+
+    with st.expander(f"Paso {step_number} · {title} · completado"):
+        st.caption(format_attempt_count(len(step.attempts)))
+        if step.help_requests:
+            st.caption("Orientación consultada")
+
+        if not reveal_result:
+            st.write(
+                "El detalle del resultado se mostrará al finalizar la evaluación."
+            )
+            return
+
+        if step_id == "paso_1":
+            answer = step.attempts[-1].answer
+            if isinstance(answer, (list, tuple)) and len(answer) == 3:
+                lx, lh, ly = (int(float(value)) for value in answer)
+                st.markdown(
+                    rf"$L_x={lx}$, $L_h={lh}$ y $L_y={ly}$."
+                )
+        elif step_id == "paso_2":
+            st.write(f"Resultado: {saved_sequence_answer(step)}")
+        elif step_id == "paso_3":
+            st.write(f"Resultado con N = 3: {saved_sequence_answer(step)}")
+            st.caption(
+                "La longitud N = 3 produce solapamiento circular."
+            )
+        elif step_id == "paso_4":
+            st.write(f"Resultado con N = 5: {saved_sequence_answer(step)}")
+            st.caption(
+                "Con N = 5, el resultado coincide con la convolución lineal."
+            )
+
+
+def render_completed_step_summaries(
+    tracker,
+    step_ids: tuple[str, ...],
+    reveal_results: bool,
+) -> None:
+    for step_id in step_ids:
+        render_completed_step_summary(tracker, step_id, reveal_results)
+
+
 def render_step_two(tracker) -> None:
     exercise = tracker.exercise
     step = tracker.session.steps["paso_2"]
     definition = exercise.get_step("paso_2")
     completed = step.status == StepStatus.COMPLETED
     help_key = f"{HELP_KEY_PREFIX}paso_2"
+    help_requested = bool(step.help_requests)
 
     st.divider()
     st.progress(0.4, text="Paso 2 de 5 · Convolución lineal")
@@ -422,20 +505,23 @@ def render_step_two(tracker) -> None:
         if st.button(
             "Ver orientación del paso 2",
             width="stretch",
-            disabled=completed,
+            disabled=completed or help_requested,
         ):
             tracker.register_help("paso_2", definition.hint)
             st.session_state[help_key] = True
             save_active_session()
+            st.rerun()
     with status_column:
         if completed:
             st.success(
                 "Paso 2 completado. La convolución lineal quedó guardada."
             )
         elif step.attempts:
-            st.caption(f"Intentos registrados: {len(step.attempts)}")
+            st.caption(format_attempt_count(len(step.attempts)))
 
-    if st.session_state.get(help_key, False) and not completed:
+    if (
+        st.session_state.get(help_key, False) or help_requested
+    ) and not completed:
         st.info(definition.hint)
 
     if completed:
@@ -452,6 +538,7 @@ def render_step_three(tracker) -> None:
     definition = exercise.get_step("paso_3")
     completed = step.status == StepStatus.COMPLETED
     help_key = f"{HELP_KEY_PREFIX}paso_3"
+    help_requested = bool(step.help_requests)
 
     st.divider()
     st.progress(0.6, text="Paso 3 de 5 · Verificación DFT/FFT con N = 3")
@@ -466,7 +553,7 @@ def render_step_three(tracker) -> None:
 
     with st.form("step_three_answer"):
         answer = st.text_input(
-            "Resultado mediante DFT/FFT con N = 3",
+            "Resultado temporal mediante DFT/FFT con N = 3",
             value=saved_sequence_answer(step),
             placeholder="Ejemplo de formato: 0, 1, 2",
             disabled=completed,
@@ -506,27 +593,30 @@ def render_step_three(tracker) -> None:
         if st.button(
             "Ver orientación del paso 3",
             width="stretch",
-            disabled=completed,
+            disabled=completed or help_requested,
         ):
             tracker.register_help("paso_3", definition.hint)
             st.session_state[help_key] = True
             save_active_session()
+            st.rerun()
     with status_column:
         if completed:
             st.success(
                 "Paso 3 completado. El resultado con N = 3 quedó guardado."
             )
         elif step.attempts:
-            st.caption(f"Intentos registrados: {len(step.attempts)}")
+            st.caption(format_attempt_count(len(step.attempts)))
 
-    if st.session_state.get(help_key, False) and not completed:
+    if (
+        st.session_state.get(help_key, False) or help_requested
+    ) and not completed:
         st.info(definition.hint)
 
     if completed:
         st.markdown("#### Resultado comprobado")
         render_signal_card(
             np.asarray(exercise.expected_results["resultado_N3"]),
-            "y_N=3[n]",
+            "y[n] para N = 3",
         )
         st.caption(
             "Como N = 3 es menor que la longitud de la convolución lineal, "
@@ -540,6 +630,7 @@ def render_step_four(tracker) -> None:
     definition = exercise.get_step("paso_4")
     completed = step.status == StepStatus.COMPLETED
     help_key = f"{HELP_KEY_PREFIX}paso_4"
+    help_requested = bool(step.help_requests)
 
     st.divider()
     st.progress(0.8, text="Paso 4 de 5 · Verificación DFT/FFT con N = 5")
@@ -554,7 +645,7 @@ def render_step_four(tracker) -> None:
 
     with st.form("step_four_answer"):
         answer = st.text_input(
-            "Resultado mediante DFT/FFT con N = 5",
+            "Resultado temporal mediante DFT/FFT con N = 5",
             value=saved_sequence_answer(step),
             placeholder="Ejemplo de formato: 0, 1, 2, 3, 4",
             disabled=completed,
@@ -594,20 +685,23 @@ def render_step_four(tracker) -> None:
         if st.button(
             "Ver orientación del paso 4",
             width="stretch",
-            disabled=completed,
+            disabled=completed or help_requested,
         ):
             tracker.register_help("paso_4", definition.hint)
             st.session_state[help_key] = True
             save_active_session()
+            st.rerun()
     with status_column:
         if completed:
             st.success(
                 "Paso 4 completado. El resultado con N = 5 quedó guardado."
             )
         elif step.attempts:
-            st.caption(f"Intentos registrados: {len(step.attempts)}")
+            st.caption(format_attempt_count(len(step.attempts)))
 
-    if st.session_state.get(help_key, False) and not completed:
+    if (
+        st.session_state.get(help_key, False) or help_requested
+    ) and not completed:
         st.info(definition.hint)
 
     if completed:
@@ -621,7 +715,7 @@ def render_step_four(tracker) -> None:
         with fft_column:
             render_signal_card(
                 np.asarray(exercise.expected_results["resultado_N5"]),
-                "y_N=5[n]",
+                "y[n] para N = 5",
             )
         st.success(
             "Con N = 5 no hay solapamiento circular: el resultado coincide "
@@ -629,13 +723,38 @@ def render_step_four(tracker) -> None:
         )
 
 
-def saved_evaluation_answer(session, question_id: str):
-    if session.evaluation is None:
-        return None
-    for question in session.evaluation.questions:
-        if question.question_id == question_id:
-            return question.answer
-    return None
+def render_step_four_result(tracker) -> None:
+    exercise = tracker.exercise
+
+    st.divider()
+    st.progress(0.8, text="Paso 4 de 5 · Resultado verificado")
+    st.subheader("Comparación de resultados")
+    linear_column, fft_column = st.columns(2)
+    with linear_column:
+        render_signal_card(
+            np.asarray(exercise.expected_results["convolucion_lineal"]),
+            "Convolución lineal y[n]",
+        )
+    with fft_column:
+        render_signal_card(
+            np.asarray(exercise.expected_results["resultado_N5"]),
+            "Resultado y[n] para N = 5",
+        )
+    st.success(
+        "Con N = 5 no hay solapamiento circular: el resultado coincide "
+        "con la convolución lineal."
+    )
+    st.write(
+        "El recorrido guiado está completo. Al iniciar la evaluación, "
+        "los resultados anteriores quedarán ocultos hasta el envío final."
+    )
+    st.button(
+        "Iniciar evaluación",
+        key="start_final_evaluation",
+        on_click=start_final_evaluation,
+        type="primary",
+        width="stretch",
+    )
 
 
 def format_grade(value: float) -> str:
@@ -672,66 +791,117 @@ def render_evaluation_summary(session) -> None:
     st.markdown("\n".join(question_rows))
 
 
-def render_step_five(tracker) -> None:
+def render_evaluation_review(
+    tracker,
+    p3_labels: dict[str, str],
+) -> None:
     exercise = tracker.exercise
+    draft = st.session_state.get(EVALUATION_DRAFT_KEY)
+    if not draft:
+        st.session_state[EVALUATION_REVIEW_KEY] = False
+        st.rerun()
+
+    st.subheader("Revisa tus respuestas")
+    st.write(
+        "La evaluación se calificará cuando confirmes el envío. "
+        "Todavía puedes volver y corregir una respuesta."
+    )
+    rows = [
+        "| Pregunta | Respuesta registrada |",
+        "|---|---|",
+        f"| P1 | {draft['P1']} |",
+        f"| P2 | {draft['P2']} |",
+        f"| P3 | {p3_labels[draft['P3']]} |",
+        f"| P4 | {'Verdadero' if draft['P4'] else 'Falso'} |",
+    ]
+    st.markdown("\n".join(rows))
+
+    edit_column, confirm_column = st.columns(2)
+    with edit_column:
+        edit = st.button(
+            "Volver a editar",
+            key="evaluation_edit",
+            width="stretch",
+        )
+    with confirm_column:
+        confirm = st.button(
+            "Confirmar y calificar",
+            key="evaluation_confirm",
+            type="primary",
+            width="stretch",
+        )
+
+    if edit:
+        st.session_state[EVALUATION_REVIEW_KEY] = False
+        st.rerun()
+    if confirm:
+        evaluation = evaluate_c3_3(draft)
+        tracker.record_evaluation(evaluation)
+        tracker.complete(exercise.expected_results)
+        save_active_session()
+        st.session_state[EVALUATION_REVIEW_KEY] = False
+        st.session_state.pop(EVALUATION_DRAFT_KEY, None)
+        st.rerun()
+
+
+def render_step_five(tracker) -> None:
     session = tracker.session
-    completed = session.evaluation is not None
+
+    st.divider()
+    st.progress(1.0, text="Paso 5 de 5 · Evaluación final")
+    if session.evaluation is not None:
+        render_evaluation_summary(session)
+        return
+
     questions = get_c3_3_questions()
     questions_by_id = {
         question.question_id: question for question in questions
     }
+    p3_question = questions_by_id["P3"]
+    p3_labels = {
+        code: f"{code.upper()}. {text}"
+        for code, text in p3_question.options
+    }
+    p3_codes = {label: code for code, label in p3_labels.items()}
 
-    st.divider()
-    st.progress(1.0, text="Paso 5 de 5 · Comparación e interpretación")
+    if st.session_state.get(EVALUATION_REVIEW_KEY, False):
+        render_evaluation_review(tracker, p3_labels)
+        return
+
     st.subheader("Compara e interpreta los resultados")
     st.write(
-        "Responde las cuatro preguntas finales. La herramienta calificará "
-        "las respuestas sobre 9 puntos y calculará la nota de 0,0 a 5,0."
+        "Responde las cuatro preguntas. El puntaje total es de 9 puntos "
+        "y la nota se calcula en una escala de 0,0 a 5,0."
     )
     st.caption(
-        "La evaluación se envía una sola vez. Revisa todas las respuestas "
-        "antes de calificarlas."
+        "Antes del envío final podrás revisar las cuatro respuestas."
     )
 
-    p3_question = questions_by_id["P3"]
-    p3_options = tuple(
-        f"{code.upper()}. {text}" for code, text in p3_question.options
-    )
-    p3_codes = {
-        label: code
-        for label, (code, _) in zip(p3_options, p3_question.options)
-    }
-    saved_p3 = saved_evaluation_answer(session, "P3")
-    saved_p3_label = next(
-        (
-            label
-            for label, code in p3_codes.items()
-            if code == saved_p3
-        ),
-        None,
-    )
+    draft = st.session_state.get(EVALUATION_DRAFT_KEY, {})
+    saved_p3 = draft.get("P3")
+    saved_p3_label = p3_labels.get(saved_p3)
+    p3_options = tuple(p3_labels.values())
     p3_index = (
         p3_options.index(saved_p3_label)
         if saved_p3_label in p3_options
         else None
     )
-
+    saved_p4 = draft.get("P4")
     p4_options = ("Verdadero", "Falso")
-    saved_p4 = saved_evaluation_answer(session, "P4")
     p4_index = (
         0 if saved_p4 is True else 1 if saved_p4 is False else None
     )
 
-    with st.form("final_evaluation"):
+    form_placeholder = st.empty()
+    with form_placeholder.form("final_evaluation"):
         st.markdown(
             f"**P1 · {questions_by_id['P1'].points} puntos**  \n"
             f"{questions_by_id['P1'].prompt}"
         )
         p1_answer = st.text_input(
             "Respuesta numérica P1",
-            value=saved_evaluation_answer(session, "P1") or "",
+            value=draft.get("P1", ""),
             placeholder="Escribe las cinco muestras",
-            disabled=completed,
         )
 
         st.markdown(
@@ -740,9 +910,8 @@ def render_step_five(tracker) -> None:
         )
         p2_answer = st.text_input(
             "Respuesta numérica P2",
-            value=saved_evaluation_answer(session, "P2") or "",
+            value=draft.get("P2", ""),
             placeholder="Escribe las tres muestras",
-            disabled=completed,
         )
 
         st.markdown(
@@ -753,7 +922,6 @@ def render_step_five(tracker) -> None:
             "Selecciona una respuesta en P3",
             p3_options,
             index=p3_index,
-            disabled=completed,
         )
 
         p4_question = questions_by_id["P4"]
@@ -765,7 +933,6 @@ def render_step_five(tracker) -> None:
             "Selecciona una respuesta en P4",
             p4_options,
             index=p4_index,
-            disabled=completed,
             horizontal=True,
         )
 
@@ -773,10 +940,9 @@ def render_step_five(tracker) -> None:
             "Calificar evaluación",
             type="primary",
             width="stretch",
-            disabled=completed,
         )
 
-    if submitted and not completed:
+    if submitted:
         if (
             parse_numeric_sequence(p1_answer) is None
             or parse_numeric_sequence(p2_answer) is None
@@ -790,20 +956,15 @@ def render_step_five(tracker) -> None:
             st.warning("Selecciona una respuesta en P3 y P4 antes de calificar.")
             return
 
-        evaluation = evaluate_c3_3(
-            {
-                "P1": p1_answer,
-                "P2": p2_answer,
-                "P3": p3_codes[p3_answer],
-                "P4": p4_answer == "Verdadero",
-            }
-        )
-        tracker.record_evaluation(evaluation)
-        tracker.complete(exercise.expected_results)
-        save_active_session()
-        st.rerun()
-
-    render_evaluation_summary(session)
+        st.session_state[EVALUATION_DRAFT_KEY] = {
+            "P1": p1_answer.strip(),
+            "P2": p2_answer.strip(),
+            "P3": p3_codes[p3_answer],
+            "P4": p4_answer == "Verdadero",
+        }
+        st.session_state[EVALUATION_REVIEW_KEY] = True
+        form_placeholder.empty()
+        render_evaluation_review(tracker, p3_labels)
 
 
 def render_active_session() -> None:
@@ -816,18 +977,58 @@ def render_active_session() -> None:
     )
     st.title("Convolución de señales discretas")
     st.caption(f"Código estudiantil: {session.student_id}")
-    render_step_one(tracker)
-    if session.steps["paso_1"].status == StepStatus.COMPLETED:
-        render_step_two(tracker)
-    if session.steps["paso_2"].status == StepStatus.COMPLETED:
-        render_step_three(tracker)
-    if session.steps["paso_3"].status == StepStatus.COMPLETED:
-        render_step_four(tracker)
-    if session.steps["paso_4"].status == StepStatus.COMPLETED:
-        render_step_five(tracker)
+
+    active_step = next(
+        (
+            step_id
+            for step_id in GUIDED_STEP_IDS
+            if session.steps[step_id].status != StepStatus.COMPLETED
+        ),
+        None,
+    )
+    if active_step is None:
+        if (
+            session.evaluation is None
+            and not st.session_state.get(EVALUATION_STARTED_KEY, False)
+        ):
+            active_view = "paso_4_resultado"
+        else:
+            active_view = "paso_5"
+    else:
+        active_view = active_step
+
+    if active_view in GUIDED_STEP_IDS:
+        active_index = GUIDED_STEP_IDS.index(active_view)
+        summary_ids = tuple(
+            step_id
+            for step_id in GUIDED_STEP_IDS[:active_index]
+            if session.steps[step_id].status == StepStatus.COMPLETED
+        )
+    elif active_view == "paso_4_resultado":
+        summary_ids = GUIDED_STEP_IDS[:3]
+    else:
+        summary_ids = GUIDED_STEP_IDS
+
+    render_completed_step_summaries(
+        tracker,
+        summary_ids,
+        reveal_results=(
+            active_view != "paso_5" or session.evaluation is not None
+        ),
+    )
+
+    renderers = {
+        "paso_1": render_step_one,
+        "paso_2": render_step_two,
+        "paso_3": render_step_three,
+        "paso_4": render_step_four,
+        "paso_4_resultado": render_step_four_result,
+        "paso_5": render_step_five,
+    }
+    renderers[active_view](tracker)
 
     if not st.session_state.get(LEAVE_CONFIRMATION_KEY, False):
-        if st.button("Volver al inicio"):
+        if st.button("Volver al inicio", key="return_to_start"):
             st.session_state[LEAVE_CONFIRMATION_KEY] = True
             st.rerun()
         return
@@ -840,11 +1041,16 @@ def render_active_session() -> None:
     with confirm_column:
         leave = st.button(
             "Guardar y volver al inicio",
+            key="confirm_return_to_start",
             type="primary",
             width="stretch",
         )
     with cancel_column:
-        cancel = st.button("Continuar ejercicio", width="stretch")
+        cancel = st.button(
+            "Continuar ejercicio",
+            key="cancel_return_to_start",
+            width="stretch",
+        )
 
     if leave:
         save_active_session()
@@ -853,6 +1059,9 @@ def render_active_session() -> None:
             HELP_KEY,
             LEAVE_CONFIRMATION_KEY,
             SESSION_PATH_KEY,
+            EVALUATION_STARTED_KEY,
+            EVALUATION_REVIEW_KEY,
+            EVALUATION_DRAFT_KEY,
         ):
             st.session_state.pop(key, None)
         for step_id in tracker.session.steps:

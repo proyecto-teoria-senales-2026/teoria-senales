@@ -69,16 +69,18 @@ class StreamlitAppTests(unittest.TestCase):
 
         self.find_text_input(
             app,
-            "Resultado mediante DFT/FFT con N = 3",
+            "Resultado temporal mediante DFT/FFT con N = 3",
         ).set_value("4 3 1")
         self.find_button(app, "Verificar resultado con N = 3").click()
         app.run(timeout=10)
 
         self.find_text_input(
             app,
-            "Resultado mediante DFT/FFT con N = 5",
+            "Resultado temporal mediante DFT/FFT con N = 5",
         ).set_value("1 1 1 3 2")
         self.find_button(app, "Verificar resultado con N = 5").click()
+        app.run(timeout=10)
+        self.find_button(app, "Iniciar evaluación").click()
         app.run(timeout=10)
 
     def test_student_can_start_a_session(self) -> None:
@@ -94,7 +96,7 @@ class StreamlitAppTests(unittest.TestCase):
         self.assertFalse(app.exception)
         self.assertEqual(
             [number_input.label for number_input in app.number_input],
-            ["Lx", "Lh", "Ly"],
+            [r"$L_x$", r"$L_h$", r"$L_y$"],
         )
         self.assertIn("Verificar respuesta", [button.label for button in app.button])
         self.assertIn("Ver orientación", [button.label for button in app.button])
@@ -148,16 +150,19 @@ class StreamlitAppTests(unittest.TestCase):
 
         self.assertFalse(app.exception)
         self.assertTrue(
-            any("Paso 1 completado" in message.value for message in app.success)
+            any(
+                "Paso 1" in expander.label and "completado" in expander.label
+                for expander in app.expander
+            )
         )
         tracker = app.session_state["c3_3_tracker"]
         step = tracker.session.steps["paso_1"]
         self.assertEqual(len(step.attempts), 1)
         self.assertTrue(step.attempts[0].correct)
-        verify_button = self.find_button(app, "Verificar respuesta")
-        self.assertTrue(verify_button.disabled)
-        verify_button.click()
-        app.run(timeout=10)
+        self.assertNotIn(
+            "Verificar respuesta",
+            [button.label for button in app.button],
+        )
         self.assertEqual(
             len(
                 app.session_state["c3_3_tracker"]
@@ -165,6 +170,32 @@ class StreamlitAppTests(unittest.TestCase):
                 .attempts
             ),
             1,
+        )
+
+    def test_completed_steps_are_compact_and_only_current_step_is_editable(
+        self,
+    ) -> None:
+        app = self.create_app()
+        app.text_input[0].set_value("FLUJO-COMPACTO")
+        app.button[0].click()
+        app.run(timeout=10)
+
+        app.number_input[0].set_value(3)
+        app.number_input[1].set_value(3)
+        app.number_input[2].set_value(5)
+        self.find_button(app, "Verificar respuesta").click()
+        app.run(timeout=10)
+
+        self.assertEqual(len(app.expander), 1)
+        self.assertIn("Paso 1", app.expander[0].label)
+        self.assertEqual(len(app.number_input), 0)
+        self.assertEqual(
+            [text_input.label for text_input in app.text_input],
+            ["Resultado de la convolución lineal"],
+        )
+        self.assertNotIn(
+            "Verificar respuesta",
+            [button.label for button in app.button],
         )
 
     def test_incomplete_answer_is_not_registered(self) -> None:
@@ -205,6 +236,9 @@ class StreamlitAppTests(unittest.TestCase):
         step = tracker.session.steps["paso_1"]
         self.assertEqual(len(step.help_requests), 1)
         self.assertTrue(any("L_y" in info.value for info in app.info))
+        self.assertTrue(
+            self.find_button(app, "Ver orientación").disabled
+        )
 
         app.number_input[2].set_value(5)
         self.find_button(app, "Verificar respuesta").click()
@@ -262,15 +296,21 @@ class StreamlitAppTests(unittest.TestCase):
         self.assertEqual(len(step.attempts), 2)
         self.assertTrue(step.attempts[-1].correct)
         self.assertTrue(
-            any("Paso 2 completado" in message.value for message in app.success)
+            any(
+                "Paso 2" in expander.label and "completado" in expander.label
+                for expander in app.expander
+            )
         )
         self.assertTrue(
-            any("y[n]" in markdown.value for markdown in app.markdown)
+            any(
+                "Resultado: 1, 1, 1, 3, 2" in markdown.value
+                for markdown in app.markdown
+            )
         )
-        verify_button = self.find_button(app, "Verificar convolución lineal")
-        self.assertTrue(verify_button.disabled)
-        verify_button.click()
-        app.run(timeout=10)
+        self.assertNotIn(
+            "Verificar convolución lineal",
+            [button.label for button in app.button],
+        )
         self.assertEqual(
             len(
                 app.session_state["c3_3_tracker"]
@@ -321,7 +361,7 @@ class StreamlitAppTests(unittest.TestCase):
 
         self.assertEqual(
             app.text_input[-1].label,
-            "Resultado mediante DFT/FFT con N = 3",
+            "Resultado temporal mediante DFT/FFT con N = 3",
         )
         app.text_input[-1].set_value("4, 3, 0")
         self.find_button(app, "Verificar resultado con N = 3").click()
@@ -351,15 +391,18 @@ class StreamlitAppTests(unittest.TestCase):
         self.assertEqual(len(step.attempts), 2)
         self.assertTrue(step.attempts[-1].correct)
         self.assertTrue(
-            any("Paso 3 completado" in message.value for message in app.success)
+            any(
+                "Paso 3" in expander.label and "completado" in expander.label
+                for expander in app.expander
+            )
         )
         self.assertTrue(
             any("solapamiento circular" in caption.value for caption in app.caption)
         )
-        verify_button = self.find_button(app, "Verificar resultado con N = 3")
-        self.assertTrue(verify_button.disabled)
-        verify_button.click()
-        app.run(timeout=10)
+        self.assertNotIn(
+            "Verificar resultado con N = 3",
+            [button.label for button in app.button],
+        )
         self.assertEqual(
             len(
                 app.session_state["c3_3_tracker"]
@@ -390,7 +433,7 @@ class StreamlitAppTests(unittest.TestCase):
 
         self.assertEqual(
             app.text_input[-1].label,
-            "Resultado mediante DFT/FFT con N = 5",
+            "Resultado temporal mediante DFT/FFT con N = 5",
         )
         app.text_input[-1].set_value("1, 1, 1, 3, 0")
         self.find_button(app, "Verificar resultado con N = 5").click()
@@ -420,18 +463,19 @@ class StreamlitAppTests(unittest.TestCase):
         self.assertEqual(len(step.attempts), 2)
         self.assertTrue(step.attempts[-1].correct)
         self.assertTrue(
-            any("Paso 4 completado" in message.value for message in app.success)
-        )
-        self.assertTrue(
             any(
                 "coincide con la convolución lineal" in message.value
                 for message in app.success
             )
         )
-        verify_button = self.find_button(app, "Verificar resultado con N = 5")
-        self.assertTrue(verify_button.disabled)
-        verify_button.click()
-        app.run(timeout=10)
+        self.assertIn(
+            "Iniciar evaluación",
+            [button.label for button in app.button],
+        )
+        self.assertNotIn(
+            "Verificar resultado con N = 5",
+            [button.label for button in app.button],
+        )
         self.assertEqual(
             len(
                 app.session_state["c3_3_tracker"]
@@ -481,33 +525,15 @@ class StreamlitAppTests(unittest.TestCase):
         self.assertFalse(recovered_app.exception)
         tracker = recovered_app.session_state["c3_3_tracker"]
         self.assertEqual(tracker.session.session_id, original_id)
-        self.assertEqual(
-            [
-                self.find_text_input(
-                    recovered_app,
-                    "Resultado de la convolución lineal",
-                ).value,
-                self.find_text_input(
-                    recovered_app,
-                    "Resultado mediante DFT/FFT con N = 3",
-                ).value,
-                self.find_text_input(
-                    recovered_app,
-                    "Resultado mediante DFT/FFT con N = 5",
-                ).value,
-            ],
-            ["1, 1, 1, 3, 2", "4, 3, 1", "1, 1, 1, 3, 2"],
+        self.assertEqual(len(recovered_app.text_input), 0)
+        self.assertEqual(len(recovered_app.expander), 3)
+        self.assertIn(
+            "Iniciar evaluación",
+            [button.label for button in recovered_app.button],
         )
-        self.assertTrue(
-            all(
-                self.find_text_input(recovered_app, label).disabled
-                for label in (
-                    "Resultado de la convolución lineal",
-                    "Resultado mediante DFT/FFT con N = 3",
-                    "Resultado mediante DFT/FFT con N = 5",
-                )
-            )
-        )
+        for step_id in ("paso_2", "paso_3", "paso_4"):
+            answer = tracker.session.steps[step_id].attempts[-1].answer
+            self.assertTrue(tracker.exercise.validate(step_id, answer))
         self.assertEqual(
             len(tracker.session.steps["paso_3"].attempts),
             2,
@@ -536,6 +562,69 @@ class StreamlitAppTests(unittest.TestCase):
         self.assertEqual(
             len(tracker.session.steps["paso_5"].attempts),
             0,
+        )
+
+    def test_evaluation_hides_guided_results_and_waits_for_confirmation(
+        self,
+    ) -> None:
+        app = self.create_app()
+        app.text_input[0].set_value("EVALUACION-REVISION")
+        app.button[0].click()
+        app.run(timeout=10)
+        self.advance_to_final_evaluation(app)
+
+        self.assertEqual(len(app.expander), 4)
+        self.assertEqual(
+            [text_input.label for text_input in app.text_input],
+            ["Respuesta numérica P1", "Respuesta numérica P2"],
+        )
+        visible_text = "\n".join(
+            element.value
+            for collection in (
+                app.markdown,
+                app.caption,
+                app.info,
+                app.success,
+            )
+            for element in collection
+        )
+        self.assertNotIn("Resultado: 1, 1, 1, 3, 2", visible_text)
+        self.assertNotIn("solapamiento circular", visible_text)
+        self.assertNotIn(
+            "el resultado coincide con la convolución lineal",
+            visible_text,
+        )
+
+        self.find_text_input(app, "Respuesta numérica P1").set_value(
+            "1, 1, 1, 3, 2"
+        )
+        self.find_text_input(app, "Respuesta numérica P2").set_value("4, 3, 1")
+        app.radio[0].set_value(
+            next(option for option in app.radio[0].options if option.startswith("C."))
+        )
+        app.radio[1].set_value("Verdadero")
+        self.find_button(app, "Calificar evaluación").click()
+        app.run(timeout=10)
+
+        self.assertIsNone(
+            app.session_state["c3_3_tracker"].session.evaluation
+        )
+        self.assertIn(
+            "Volver a editar",
+            [button.label for button in app.button],
+        )
+        self.assertIn(
+            "Confirmar y calificar",
+            [button.label for button in app.button],
+        )
+        self.find_button(app, "Volver a editar").click()
+        app.run(timeout=10)
+        self.assertEqual(
+            [
+                self.find_text_input(app, "Respuesta numérica P1").value,
+                self.find_text_input(app, "Respuesta numérica P2").value,
+            ],
+            ["1, 1, 1, 3, 2", "4, 3, 1"],
         )
 
     def test_final_evaluation_requires_both_selected_answers(self) -> None:
@@ -581,6 +670,16 @@ class StreamlitAppTests(unittest.TestCase):
         self.find_button(app, "Calificar evaluación").click()
         app.run(timeout=10)
 
+        self.assertIsNone(
+            app.session_state["c3_3_tracker"].session.evaluation
+        )
+        self.assertIn(
+            "Confirmar y calificar",
+            [button.label for button in app.button],
+        )
+        self.find_button(app, "Confirmar y calificar").click()
+        app.run(timeout=10)
+
         self.assertFalse(app.exception)
         tracker = app.session_state["c3_3_tracker"]
         evaluation = tracker.session.evaluation
@@ -600,10 +699,10 @@ class StreamlitAppTests(unittest.TestCase):
                 for success in app.success
             )
         )
-        verify_button = self.find_button(app, "Calificar evaluación")
-        self.assertTrue(verify_button.disabled)
-        verify_button.click()
-        app.run(timeout=10)
+        self.assertNotIn(
+            "Calificar evaluación",
+            [button.label for button in app.button],
+        )
         self.assertEqual(
             len(
                 app.session_state["c3_3_tracker"]
@@ -629,6 +728,8 @@ class StreamlitAppTests(unittest.TestCase):
         )
         app.radio[1].set_value("Falso")
         self.find_button(app, "Calificar evaluación").click()
+        app.run(timeout=10)
+        self.find_button(app, "Confirmar y calificar").click()
         app.run(timeout=10)
 
         evaluation = app.session_state["c3_3_tracker"].session.evaluation
@@ -740,12 +841,16 @@ class StreamlitAppTests(unittest.TestCase):
         recovered_app.run(timeout=10)
 
         self.assertFalse(recovered_app.exception)
-        self.assertEqual(
-            [number_input.value for number_input in recovered_app.number_input],
-            [3, 3, 5],
-        )
+        self.assertEqual(len(recovered_app.number_input), 0)
+        self.assertEqual(len(recovered_app.expander), 1)
+        self.assertIn("Paso 1", recovered_app.expander[0].label)
         self.assertTrue(
-            all(number_input.disabled for number_input in recovered_app.number_input)
+            any(
+                "$L_x=3$" in markdown.value
+                and "$L_h=3$" in markdown.value
+                and "$L_y=5$" in markdown.value
+                for markdown in recovered_app.markdown
+            )
         )
 
     def test_student_can_start_a_new_attempt_instead_of_recovering(self) -> None:
