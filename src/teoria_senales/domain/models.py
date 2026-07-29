@@ -99,8 +99,6 @@ class SessionRecord:
     finished_at: str | None = None
     steps: dict[str, StepRecord] = field(default_factory=dict)
     results: dict[str, Any] = field(default_factory=dict)
-    interpretation_answers: dict[str, str] = field(default_factory=dict)
-    conclusion: str = ""
     evaluation: EvaluationRecord | None = None
     criteria: list[CriterionRecord] = field(default_factory=list)
 
@@ -179,8 +177,6 @@ class SessionRecord:
             finished_at=data.get("finished_at"),
             steps=steps,
             results=dict(data.get("results", {})),
-            interpretation_answers=dict(data.get("interpretation_answers", {})),
-            conclusion=data.get("conclusion", ""),
             evaluation=evaluation,
             criteria=criteria,
         )

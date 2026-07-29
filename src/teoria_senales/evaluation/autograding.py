@@ -120,7 +120,7 @@ def _build_c3_3_questions() -> tuple[QuestionDefinition, ...]:
                 "obtenidos con N = 3 y N = 5?"
             ),
             points=2,
-            criterion_ids=("CR3", "CR4", "CR5"),
+            criterion_ids=("CR5",),
             rae_id="RAE_C3",
             expected_answer="c",
             options=(

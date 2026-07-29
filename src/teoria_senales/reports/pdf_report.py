@@ -19,7 +19,6 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
     Image,
-    KeepTogether,
     PageBreak,
     Paragraph,
     SimpleDocTemplate,
@@ -82,6 +81,14 @@ def _format_sequence(values: object) -> str:
         number = float(value)
         formatted.append(str(int(number)) if number.is_integer() else f"{number:.4g}")
     return "{" + ", ".join(formatted) + "}"
+
+
+def _format_answer(value: object) -> str:
+    if isinstance(value, bool):
+        return "Verdadero" if value else "Falso"
+    if isinstance(value, list):
+        return _format_sequence(value)
+    return str(value)
 
 
 def _format_date(value: str) -> str:
@@ -280,24 +287,79 @@ def generate_pdf_report(session: SessionRecord, output_directory: str | Path) ->
     chart = Image(_results_figure(session), width=15.5 * cm, height=8.7 * cm)
     story.extend([result_table, Spacer(1, 8), chart, PageBreak()])
 
-    story.append(Paragraph("Interpretación del estudiante", styles["Section"]))
-    for question, answer in session.interpretation_answers.items():
-        story.append(
-            KeepTogether(
+    story.append(Paragraph("Evaluación automática", styles["Section"]))
+    if session.evaluation is not None:
+        evaluation_summary = Table(
+            [
                 [
-                    Paragraph(f"<b>{question}</b>", styles["BodyText"]),
-                    Paragraph(answer or "Sin respuesta registrada.", styles["BodyText"]),
-                    Spacer(1, 5),
+                    "Puntaje",
+                    (
+                        f"{session.evaluation.points_earned}/"
+                        f"{session.evaluation.points_possible}"
+                    ),
+                    "Nota",
+                    f"{session.evaluation.grade:.2f}".replace(".", ","),
+                ]
+            ],
+            colWidths=[2.3 * cm, 3.3 * cm, 2.3 * cm, 3.3 * cm],
+        )
+        evaluation_summary.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (0, -1), LIGHT_BLUE),
+                    ("BACKGROUND", (2, 0), (2, -1), LIGHT_BLUE),
+                    ("TEXTCOLOR", (0, 0), (0, -1), NAVY),
+                    ("TEXTCOLOR", (2, 0), (2, -1), NAVY),
+                    ("FONTNAME", (0, 0), (-1, -1), REGULAR_FONT),
+                    ("FONTNAME", (0, 0), (0, -1), BOLD_FONT),
+                    ("FONTNAME", (2, 0), (2, -1), BOLD_FONT),
+                    ("FONTSIZE", (0, 0), (-1, -1), 8.5),
+                    ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#C6CDD6")),
+                    ("ALIGN", (1, 0), (-1, -1), "CENTER"),
+                    ("TOPPADDING", (0, 0), (-1, -1), 5),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
                 ]
             )
         )
-    story.extend(
-        [
-            Paragraph("Conclusión", styles["Section"]),
-            Paragraph(session.conclusion or "Sin conclusión registrada.", styles["BodyText"]),
-            Paragraph("Criterios de revisión", styles["Section"]),
-        ]
-    )
+        question_rows = [["Pregunta", "Respuesta", "Resultado", "Puntaje", "Criterio"]]
+        for question in session.evaluation.questions:
+            question_rows.append(
+                [
+                    question.question_id,
+                    Paragraph(_format_answer(question.answer), styles["BodyText"]),
+                    "Correcta" if question.correct else "Incorrecta",
+                    f"{question.points_earned}/{question.points_possible}",
+                    ", ".join(question.criterion_ids),
+                ]
+            )
+        question_table = Table(
+            question_rows,
+            colWidths=[2.0 * cm, 5.6 * cm, 2.4 * cm, 2.1 * cm, 4.1 * cm],
+            repeatRows=1,
+        )
+        question_table.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, 0), BLUE),
+                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                    ("FONTNAME", (0, 0), (-1, 0), BOLD_FONT),
+                    ("FONTNAME", (0, 1), (-1, -1), REGULAR_FONT),
+                    ("FONTSIZE", (0, 0), (-1, -1), 8),
+                    ("ALIGN", (0, 1), (0, -1), "CENTER"),
+                    ("ALIGN", (2, 1), (-1, -1), "CENTER"),
+                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                    ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, LIGHT_GRAY]),
+                    ("GRID", (0, 0), (-1, -1), 0.35, colors.HexColor("#C6CDD6")),
+                    ("TOPPADDING", (0, 0), (-1, -1), 4),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                ]
+            )
+        )
+        story.extend([evaluation_summary, Spacer(1, 7), question_table])
+    else:
+        story.append(Paragraph("Evaluación pendiente.", styles["BodyText"]))
+
+    story.append(Paragraph("Criterios de revisión", styles["Section"]))
 
     criteria_rows = [["Criterio", "Estado", "Evidencia"]]
     for criterion in session.criteria:

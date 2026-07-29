@@ -84,20 +84,6 @@ class SessionTracker:
         if step.status == StepStatus.NOT_STARTED:
             step.status = StepStatus.IN_PROGRESS
 
-    def record_interpretation(self, answers: dict[str, str], conclusion: str) -> None:
-        self.session.interpretation_answers = answers
-        self.session.conclusion = conclusion
-        step = self.session.steps["paso_5"]
-        step.attempts.append(
-            AttemptRecord(
-                number=len(step.attempts) + 1,
-                answer={"respuestas": answers, "conclusion": conclusion},
-                correct=None,
-                feedback="Respuestas registradas para revisión docente.",
-            )
-        )
-        step.status = StepStatus.TEACHER_REVIEW
-
     def record_evaluation(self, result: EvaluationResult) -> EvaluationRecord:
         """Guarda respuestas, puntaje y evidencia por criterio en la sesión."""
 
@@ -227,23 +213,23 @@ class SessionTracker:
             )
             records.append(CriterionRecord(criterion_id, description, status, evidence))
 
-        records.extend(self._interpretation_criteria())
+        records.extend(self._conceptual_criteria())
         return self._apply_evaluation_results(records)
 
     @staticmethod
-    def _interpretation_criteria() -> list[CriterionRecord]:
+    def _conceptual_criteria() -> list[CriterionRecord]:
         return [
             CriterionRecord(
                 "CR5",
                 "Compara los resultados y reconoce la función del relleno con ceros.",
                 CriterionStatus.TEACHER_REVIEW,
-                "Respuestas de comparación registradas en el Paso 5.",
+                "Pendiente de responder P5 y P6 en la evaluación automática.",
             ),
             CriterionRecord(
                 "CR6",
                 "Reconoce la convolución circular y relaciona tiempo y frecuencia.",
                 CriterionStatus.TEACHER_REVIEW,
-                "Respuestas conceptuales registradas en el Paso 5.",
+                "Pendiente de responder P7 y P8 en la evaluación automática.",
             ),
         ]
 

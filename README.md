@@ -39,9 +39,9 @@ El desarrollo permite:
 - calcular una nota automática de `0,0` a `5,0`.
 
 La interacción por consola se conserva como apoyo para las pruebas. La interfaz
-gráfica está en construcción y ya permite desarrollar los cuatro pasos
-numéricos del recorrido guiado, con retroalimentación y persistencia después de
-cada interacción.
+gráfica ya permite desarrollar los cuatro pasos numéricos, responder la
+evaluación de ocho preguntas y revisar la calificación antes del envío
+definitivo. Los avances se guardan después de cada interacción.
 
 ## Estructura del repositorio
 

@@ -52,7 +52,7 @@ class C33AutogradingTests(unittest.TestCase):
                 ("CR2",),
                 ("CR3",),
                 ("CR4",),
-                ("CR3", "CR4", "CR5"),
+                ("CR5",),
                 ("CR5",),
                 ("CR6",),
                 ("CR6",),

@@ -134,16 +134,18 @@ class ConvolutionTests(unittest.TestCase):
             self.assertEqual(session_data["evaluation"]["points_possible"], 18)
             self.assertEqual(session_data["evaluation"]["grade"], 5.0)
             self.assertEqual(len(session_data["evaluation"]["questions"]), 8)
+            self.assertNotIn("interpretation_answers", session_data)
+            self.assertNotIn("conclusion", session_data)
 
-    def test_evaluation_is_saved_with_results_by_criterion(self) -> None:
+    def test_incorrect_p5_does_not_change_cr3_or_cr4(self) -> None:
         tracker = SessionTracker("Ana", "EST-001", self.exercise)
         result = evaluate_c3_3(
             {
                 "P1": [3, 3, 5],
                 "P2": [1, 1, 1, 3, 2],
-                "P3": [4, 3, 0],
-                "P4": [1, 1, 1, 3, 0],
-                "P5": "c",
+                "P3": [4, 3, 1],
+                "P4": [1, 1, 1, 3, 2],
+                "P5": "a",
                 "P6": "b",
                 "P7": False,
                 "P8": True,
@@ -157,12 +159,12 @@ class ConvolutionTests(unittest.TestCase):
             session_data = json.loads(json_path.read_text(encoding="utf-8"))
 
         evaluation = session_data["evaluation"]
-        self.assertEqual(evaluation["points_earned"], 12)
+        self.assertEqual(evaluation["points_earned"], 16)
         self.assertEqual(evaluation["points_possible"], 18)
-        self.assertEqual(evaluation["grade"], 3.33)
+        self.assertEqual(evaluation["grade"], 4.44)
         self.assertEqual(
             [question["points_earned"] for question in evaluation["questions"]],
-            [3, 3, 0, 0, 2, 2, 1, 1],
+            [3, 3, 3, 3, 0, 2, 1, 1],
         )
         self.assertEqual(
             [criterion["criterion_id"] for criterion in evaluation["criteria"]],
@@ -174,7 +176,15 @@ class ConvolutionTests(unittest.TestCase):
         }
         self.assertEqual(
             criteria_evaluation["CR3"]["question_ids"],
-            ["P3", "P5"],
+            ["P3"],
+        )
+        self.assertEqual(
+            criteria_evaluation["CR4"]["question_ids"],
+            ["P4"],
+        )
+        self.assertEqual(
+            criteria_evaluation["CR5"]["question_ids"],
+            ["P5", "P6"],
         )
 
         criteria = {
@@ -182,9 +192,9 @@ class ConvolutionTests(unittest.TestCase):
             for criterion in session_data["criteria"]
         }
         self.assertEqual(criteria["CR2"]["status"], "alcanzado")
-        self.assertEqual(criteria["CR3"]["status"], "requiere_refuerzo")
-        self.assertEqual(criteria["CR4"]["status"], "requiere_refuerzo")
-        self.assertEqual(criteria["CR5"]["status"], "alcanzado")
+        self.assertEqual(criteria["CR3"]["status"], "alcanzado")
+        self.assertEqual(criteria["CR4"]["status"], "alcanzado")
+        self.assertEqual(criteria["CR5"]["status"], "requiere_refuerzo")
         self.assertEqual(criteria["CR6"]["status"], "alcanzado")
         self.assertEqual(
             session_data["steps"]["paso_5"]["status"],
