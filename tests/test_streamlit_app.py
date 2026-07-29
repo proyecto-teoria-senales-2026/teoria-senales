@@ -83,6 +83,38 @@ class StreamlitAppTests(unittest.TestCase):
         self.find_button(app, "Iniciar evaluación").click()
         app.run(timeout=10)
 
+    def fill_numeric_evaluation_answers(self, app: AppTest) -> None:
+        answers = {
+            "P1": "3, 3, 5",
+            "P2": "1, 1, 1, 3, 2",
+            "P3": "4, 3, 1",
+            "P4": "1, 1, 1, 3, 2",
+        }
+        for question_id, answer in answers.items():
+            self.find_text_input(
+                app,
+                f"Respuesta numérica {question_id}",
+            ).set_value(answer)
+
+    def fill_complete_evaluation(self, app: AppTest) -> None:
+        self.fill_numeric_evaluation_answers(app)
+        app.radio[0].set_value(
+            next(
+                option
+                for option in app.radio[0].options
+                if option.startswith("C.")
+            )
+        )
+        app.radio[1].set_value(
+            next(
+                option
+                for option in app.radio[1].options
+                if option.startswith("B.")
+            )
+        )
+        app.radio[2].set_value("Falso")
+        app.radio[3].set_value("Verdadero")
+
     def test_student_can_start_a_session(self) -> None:
         app = self.create_app()
 
@@ -543,7 +575,7 @@ class StreamlitAppTests(unittest.TestCase):
             1,
         )
 
-    def test_final_evaluation_requires_all_four_answers(self) -> None:
+    def test_final_evaluation_requires_all_eight_answers(self) -> None:
         app = self.create_app()
         app.text_input[0].set_value("EVALUACION-INCOMPLETA")
         app.button[0].click()
@@ -555,7 +587,10 @@ class StreamlitAppTests(unittest.TestCase):
 
         self.assertFalse(app.exception)
         self.assertTrue(
-            any("Completa P1 y P2" in warning.value for warning in app.warning)
+            any(
+                "Completa P1, P2, P3, P4" in warning.value
+                for warning in app.warning
+            )
         )
         tracker = app.session_state["c3_3_tracker"]
         self.assertIsNone(tracker.session.evaluation)
@@ -576,7 +611,12 @@ class StreamlitAppTests(unittest.TestCase):
         self.assertEqual(len(app.expander), 4)
         self.assertEqual(
             [text_input.label for text_input in app.text_input],
-            ["Respuesta numérica P1", "Respuesta numérica P2"],
+            [
+                "Respuesta numérica P1",
+                "Respuesta numérica P2",
+                "Respuesta numérica P3",
+                "Respuesta numérica P4",
+            ],
         )
         visible_text = "\n".join(
             element.value
@@ -595,14 +635,7 @@ class StreamlitAppTests(unittest.TestCase):
             visible_text,
         )
 
-        self.find_text_input(app, "Respuesta numérica P1").set_value(
-            "1, 1, 1, 3, 2"
-        )
-        self.find_text_input(app, "Respuesta numérica P2").set_value("4, 3, 1")
-        app.radio[0].set_value(
-            next(option for option in app.radio[0].options if option.startswith("C."))
-        )
-        app.radio[1].set_value("Verdadero")
+        self.fill_complete_evaluation(app)
         self.find_button(app, "Calificar evaluación").click()
         app.run(timeout=10)
 
@@ -623,28 +656,32 @@ class StreamlitAppTests(unittest.TestCase):
             [
                 self.find_text_input(app, "Respuesta numérica P1").value,
                 self.find_text_input(app, "Respuesta numérica P2").value,
+                self.find_text_input(app, "Respuesta numérica P3").value,
+                self.find_text_input(app, "Respuesta numérica P4").value,
             ],
-            ["1, 1, 1, 3, 2", "4, 3, 1"],
+            [
+                "3, 3, 5",
+                "1, 1, 1, 3, 2",
+                "4, 3, 1",
+                "1, 1, 1, 3, 2",
+            ],
         )
 
-    def test_final_evaluation_requires_both_selected_answers(self) -> None:
+    def test_final_evaluation_requires_all_selected_answers(self) -> None:
         app = self.create_app()
         app.text_input[0].set_value("EVALUACION-SELECCIONES")
         app.button[0].click()
         app.run(timeout=10)
         self.advance_to_final_evaluation(app)
 
-        self.find_text_input(app, "Respuesta numérica P1").set_value(
-            "1, 1, 1, 3, 2"
-        )
-        self.find_text_input(app, "Respuesta numérica P2").set_value("4, 3, 1")
+        self.fill_numeric_evaluation_answers(app)
         self.find_button(app, "Calificar evaluación").click()
         app.run(timeout=10)
 
         self.assertFalse(app.exception)
         self.assertTrue(
             any(
-                "Selecciona una respuesta en P3 y P4" in warning.value
+                "Selecciona una respuesta en P5, P6, P7, P8" in warning.value
                 for warning in app.warning
             )
         )
@@ -659,14 +696,7 @@ class StreamlitAppTests(unittest.TestCase):
         app.run(timeout=10)
         self.advance_to_final_evaluation(app)
 
-        self.find_text_input(app, "Respuesta numérica P1").set_value(
-            "1, 1, 1, 3, 2"
-        )
-        self.find_text_input(app, "Respuesta numérica P2").set_value("4, 3, 1")
-        app.radio[0].set_value(
-            next(option for option in app.radio[0].options if option.startswith("C."))
-        )
-        app.radio[1].set_value("Verdadero")
+        self.fill_complete_evaluation(app)
         self.find_button(app, "Calificar evaluación").click()
         app.run(timeout=10)
 
@@ -684,8 +714,8 @@ class StreamlitAppTests(unittest.TestCase):
         tracker = app.session_state["c3_3_tracker"]
         evaluation = tracker.session.evaluation
         self.assertIsNotNone(evaluation)
-        self.assertEqual(evaluation.points_earned, 9)
-        self.assertEqual(evaluation.points_possible, 9)
+        self.assertEqual(evaluation.points_earned, 18)
+        self.assertEqual(evaluation.points_possible, 18)
         self.assertEqual(evaluation.grade, 5.0)
         self.assertIsNotNone(tracker.session.finished_at)
         self.assertEqual(
@@ -719,25 +749,30 @@ class StreamlitAppTests(unittest.TestCase):
         app.run(timeout=10)
         self.advance_to_final_evaluation(app)
 
-        self.find_text_input(app, "Respuesta numérica P1").set_value(
-            "1, 1, 1, 3, 2"
+        self.fill_numeric_evaluation_answers(app)
+        self.find_text_input(app, "Respuesta numérica P3").set_value("4, 3, 0")
+        self.find_text_input(app, "Respuesta numérica P4").set_value(
+            "1, 1, 1, 3, 0"
         )
-        self.find_text_input(app, "Respuesta numérica P2").set_value("4, 3, 0")
         app.radio[0].set_value(
             next(option for option in app.radio[0].options if option.startswith("C."))
         )
-        app.radio[1].set_value("Falso")
+        app.radio[1].set_value(
+            next(option for option in app.radio[1].options if option.startswith("B."))
+        )
+        app.radio[2].set_value("Falso")
+        app.radio[3].set_value("Verdadero")
         self.find_button(app, "Calificar evaluación").click()
         app.run(timeout=10)
         self.find_button(app, "Confirmar y calificar").click()
         app.run(timeout=10)
 
         evaluation = app.session_state["c3_3_tracker"].session.evaluation
-        self.assertEqual(evaluation.points_earned, 5)
-        self.assertEqual(evaluation.grade, 2.78)
+        self.assertEqual(evaluation.points_earned, 12)
+        self.assertEqual(evaluation.grade, 3.33)
         self.assertEqual(
             [question.points_earned for question in evaluation.questions],
-            [3, 0, 2, 0],
+            [3, 3, 0, 0, 2, 2, 1, 1],
         )
 
     def test_return_to_start_requires_confirmation(self) -> None:

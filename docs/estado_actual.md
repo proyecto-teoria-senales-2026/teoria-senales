@@ -10,9 +10,9 @@ Este documento deja por escrito qué se mantiene del planteamiento aprobado, qu�
 4. El estudiante desarrolla el procedimiento y explica los resultados. La herramienta se utiliza para visualizar, verificar y comparar.
 5. Los intentos, las correcciones y las ayudas se registran por cada paso.
 6. Al finalizar el ejercicio se genera un reporte PDF. El estudiante no debe preparar otro archivo.
-7. La evaluación del C3-3 utiliza cuatro preguntas autocalificables: dos
-   numéricas, una de selección múltiple y una de verdadero/falso.
-8. Las cuatro preguntas suman nueve puntos y producen una nota automática de
+7. La evaluación del C3-3 utiliza ocho preguntas autocalificables: cuatro
+   numéricas, dos de selección múltiple y dos de verdadero/falso.
+8. Las ocho preguntas suman dieciocho puntos y producen una nota automática de
    `0,0` a `5,0`.
 
 ## Lo que ya funciona
@@ -22,7 +22,7 @@ Este documento deja por escrito qué se mantiene del planteamiento aprobado, qu�
 - Validación de cuatro pasos numéricos.
 - Registro de la sesión en formato JSON.
 - Seguimiento de intentos, correcciones y ayudas.
-- Evaluación automática de cuatro preguntas sobre nueve puntos.
+- Evaluación automática de ocho preguntas sobre dieciocho puntos.
 - Registro de las respuestas, el puntaje, la nota y los resultados por criterio.
 - Pantalla inicial en Streamlit con ingreso del código estudiantil.
 - Creación y conservación de la sesión durante la navegación.
@@ -42,15 +42,15 @@ Este documento deja por escrito qué se mantiene del planteamiento aprobado, qu�
   reconocer el solapamiento circular.
 - Cuarto paso guiado para verificar mediante DFT/FFT el caso `N = 5` y
   comparar su resultado con la convolución lineal.
-- Quinto paso integrado con las cuatro preguntas autocalificables, puntaje sobre
-  nueve y nota automática de `0,0` a `5,0`.
+- Quinto paso integrado con las ocho preguntas autocalificables, puntaje sobre
+  dieciocho y nota automática de `0,0` a `5,0`.
 - Cierre de la sesión al enviar la evaluación, con una sola evidencia por
   pregunta y resultado por criterio.
 - Presentación de un solo paso activo, con los pasos terminados organizados en
   resúmenes plegables.
 - Ocultamiento de resultados y explicaciones del recorrido guiado mientras la
   evaluación está activa.
-- Revisión de las cuatro respuestas antes de confirmar la calificación.
+- Revisión de las ocho respuestas antes de confirmar la calificación.
 - Registro de una sola consulta por orientación, aunque el control se active
   nuevamente.
 - Recuperación en pantalla de las respuestas, intentos y ayudas de los cuatro
@@ -75,7 +75,5 @@ Este documento deja por escrito qué se mantiene del planteamiento aprobado, qu�
 - Momento exacto en que se generará el PDF.
 - Mecanismo de publicación y control de acceso para el piloto con estudiantes.
 - Ajustes académicos que soliciten los tutores después de revisar el C3-3.
-- Confirmación de la cantidad definitiva de preguntas para extender el banco
-  después de validar la carga del piloto C3-3.
 
 Estas decisiones se mantienen separadas del núcleo numérico. Así pueden ajustarse más adelante sin rehacer el cálculo ni las reglas del ejercicio aprobado.

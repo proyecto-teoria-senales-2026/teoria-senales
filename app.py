@@ -23,6 +23,7 @@ from teoria_senales.app.web_session import (
 )
 from teoria_senales.domain.models import StepStatus
 from teoria_senales.evaluation.autograding import (
+    QuestionType,
     evaluate_c3_3,
     get_c3_3_questions,
 )
@@ -793,7 +794,7 @@ def render_evaluation_summary(session) -> None:
 
 def render_evaluation_review(
     tracker,
-    p3_labels: dict[str, str],
+    option_labels: dict[str, dict[str, str]],
 ) -> None:
     exercise = tracker.exercise
     draft = st.session_state.get(EVALUATION_DRAFT_KEY)
@@ -809,11 +810,16 @@ def render_evaluation_review(
     rows = [
         "| Pregunta | Respuesta registrada |",
         "|---|---|",
-        f"| P1 | {draft['P1']} |",
-        f"| P2 | {draft['P2']} |",
-        f"| P3 | {p3_labels[draft['P3']]} |",
-        f"| P4 | {'Verdadero' if draft['P4'] else 'Falso'} |",
     ]
+    for question in get_c3_3_questions():
+        answer = draft[question.question_id]
+        if question.question_type == QuestionType.MULTIPLE_CHOICE:
+            displayed_answer = option_labels[question.question_id][answer]
+        elif question.question_type == QuestionType.TRUE_FALSE:
+            displayed_answer = "Verdadero" if answer else "Falso"
+        else:
+            displayed_answer = answer
+        rows.append(f"| {question.question_id} | {displayed_answer} |")
     st.markdown("\n".join(rows))
 
     edit_column, confirm_column = st.columns(2)
@@ -854,87 +860,84 @@ def render_step_five(tracker) -> None:
         return
 
     questions = get_c3_3_questions()
-    questions_by_id = {
-        question.question_id: question for question in questions
+    option_labels = {
+        question.question_id: {
+            code: f"{code.upper()}. {text}"
+            for code, text in question.options
+        }
+        for question in questions
+        if question.question_type == QuestionType.MULTIPLE_CHOICE
     }
-    p3_question = questions_by_id["P3"]
-    p3_labels = {
-        code: f"{code.upper()}. {text}"
-        for code, text in p3_question.options
+    option_codes = {
+        question_id: {
+            label: code
+            for code, label in labels.items()
+        }
+        for question_id, labels in option_labels.items()
     }
-    p3_codes = {label: code for code, label in p3_labels.items()}
 
     if st.session_state.get(EVALUATION_REVIEW_KEY, False):
-        render_evaluation_review(tracker, p3_labels)
+        render_evaluation_review(tracker, option_labels)
         return
 
     st.subheader("Compara e interpreta los resultados")
     st.write(
-        "Responde las cuatro preguntas. El puntaje total es de 9 puntos "
+        "Responde las ocho preguntas. El puntaje total es de 18 puntos "
         "y la nota se calcula en una escala de 0,0 a 5,0."
     )
     st.caption(
-        "Antes del envío final podrás revisar las cuatro respuestas."
+        "Antes del envío final podrás revisar las ocho respuestas."
     )
 
     draft = st.session_state.get(EVALUATION_DRAFT_KEY, {})
-    saved_p3 = draft.get("P3")
-    saved_p3_label = p3_labels.get(saved_p3)
-    p3_options = tuple(p3_labels.values())
-    p3_index = (
-        p3_options.index(saved_p3_label)
-        if saved_p3_label in p3_options
-        else None
-    )
-    saved_p4 = draft.get("P4")
-    p4_options = ("Verdadero", "Falso")
-    p4_index = (
-        0 if saved_p4 is True else 1 if saved_p4 is False else None
-    )
+    form_answers: dict[str, object] = {}
 
     form_placeholder = st.empty()
     with form_placeholder.form("final_evaluation"):
-        st.markdown(
-            f"**P1 · {questions_by_id['P1'].points} puntos**  \n"
-            f"{questions_by_id['P1'].prompt}"
-        )
-        p1_answer = st.text_input(
-            "Respuesta numérica P1",
-            value=draft.get("P1", ""),
-            placeholder="Escribe las cinco muestras",
-        )
-
-        st.markdown(
-            f"**P2 · {questions_by_id['P2'].points} puntos**  \n"
-            f"{questions_by_id['P2'].prompt}"
-        )
-        p2_answer = st.text_input(
-            "Respuesta numérica P2",
-            value=draft.get("P2", ""),
-            placeholder="Escribe las tres muestras",
-        )
-
-        st.markdown(
-            f"**P3 · {p3_question.points} puntos**  \n"
-            f"{p3_question.prompt}"
-        )
-        p3_answer = st.radio(
-            "Selecciona una respuesta en P3",
-            p3_options,
-            index=p3_index,
-        )
-
-        p4_question = questions_by_id["P4"]
-        st.markdown(
-            f"**P4 · {p4_question.points} punto**  \n"
-            f"{p4_question.prompt}"
-        )
-        p4_answer = st.radio(
-            "Selecciona una respuesta en P4",
-            p4_options,
-            index=p4_index,
-            horizontal=True,
-        )
+        for question in questions:
+            point_label = "punto" if question.points == 1 else "puntos"
+            st.markdown(
+                f"**{question.question_id} · {question.points} "
+                f"{point_label}**  \n{question.prompt}"
+            )
+            if question.question_type == QuestionType.NUMERIC:
+                expected_length = len(question.expected_answer)
+                form_answers[question.question_id] = st.text_input(
+                    f"Respuesta numérica {question.question_id}",
+                    value=draft.get(question.question_id, ""),
+                    placeholder=f"Escribe {expected_length} valores",
+                    key=f"evaluation_{question.question_id}",
+                )
+            elif question.question_type == QuestionType.MULTIPLE_CHOICE:
+                labels = option_labels[question.question_id]
+                options = tuple(labels.values())
+                saved_label = labels.get(draft.get(question.question_id))
+                selected_index = (
+                    options.index(saved_label)
+                    if saved_label in options
+                    else None
+                )
+                form_answers[question.question_id] = st.radio(
+                    f"Selecciona una respuesta en {question.question_id}",
+                    options,
+                    index=selected_index,
+                    key=f"evaluation_{question.question_id}",
+                )
+            else:
+                options = ("Verdadero", "Falso")
+                saved_answer = draft.get(question.question_id)
+                selected_index = (
+                    0 if saved_answer is True
+                    else 1 if saved_answer is False
+                    else None
+                )
+                form_answers[question.question_id] = st.radio(
+                    f"Selecciona una respuesta en {question.question_id}",
+                    options,
+                    index=selected_index,
+                    horizontal=True,
+                    key=f"evaluation_{question.question_id}",
+                )
 
         submitted = st.form_submit_button(
             "Calificar evaluación",
@@ -943,28 +946,47 @@ def render_step_five(tracker) -> None:
         )
 
     if submitted:
-        if (
-            parse_numeric_sequence(p1_answer) is None
-            or parse_numeric_sequence(p2_answer) is None
-        ):
+        invalid_numeric = [
+            question.question_id
+            for question in questions
+            if question.question_type == QuestionType.NUMERIC
+            and parse_numeric_sequence(form_answers[question.question_id]) is None
+        ]
+        if invalid_numeric:
             st.warning(
-                "Completa P1 y P2 únicamente con valores numéricos separados "
+                f"Completa {', '.join(invalid_numeric)} únicamente con valores "
+                "numéricos separados "
                 "por comas, espacios o punto y coma."
             )
             return
-        if p3_answer is None or p4_answer is None:
-            st.warning("Selecciona una respuesta en P3 y P4 antes de calificar.")
+        unselected = [
+            question.question_id
+            for question in questions
+            if question.question_type != QuestionType.NUMERIC
+            and form_answers[question.question_id] is None
+        ]
+        if unselected:
+            st.warning(
+                f"Selecciona una respuesta en {', '.join(unselected)} "
+                "antes de calificar."
+            )
             return
 
-        st.session_state[EVALUATION_DRAFT_KEY] = {
-            "P1": p1_answer.strip(),
-            "P2": p2_answer.strip(),
-            "P3": p3_codes[p3_answer],
-            "P4": p4_answer == "Verdadero",
-        }
+        evaluation_draft: dict[str, object] = {}
+        for question in questions:
+            answer = form_answers[question.question_id]
+            if question.question_type == QuestionType.NUMERIC:
+                evaluation_draft[question.question_id] = answer.strip()
+            elif question.question_type == QuestionType.MULTIPLE_CHOICE:
+                evaluation_draft[question.question_id] = option_codes[
+                    question.question_id
+                ][answer]
+            else:
+                evaluation_draft[question.question_id] = answer == "Verdadero"
+        st.session_state[EVALUATION_DRAFT_KEY] = evaluation_draft
         st.session_state[EVALUATION_REVIEW_KEY] = True
         form_placeholder.empty()
-        render_evaluation_review(tracker, p3_labels)
+        render_evaluation_review(tracker, option_labels)
 
 
 def render_active_session() -> None:

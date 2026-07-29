@@ -78,6 +78,8 @@ class SessionTracker:
 
     def register_help(self, step_id: str, help_text: str) -> None:
         step = self.session.steps[step_id]
+        if help_text in step.help_requests:
+            return
         step.help_requests.append(help_text)
         if step.status == StepStatus.NOT_STARTED:
             step.status = StepStatus.IN_PROGRESS
@@ -196,8 +198,13 @@ class SessionTracker:
             ),
             (
                 "CR3",
-                "Compara los resultados obtenidos con N = 3 y N = 5.",
-                ("paso_3", "paso_4"),
+                "Obtiene el resultado mediante DFT/FFT para N = 3.",
+                ("paso_3",),
+            ),
+            (
+                "CR4",
+                "Obtiene el resultado mediante DFT/FFT para N = 5.",
+                ("paso_4",),
             ),
         )
         records: list[CriterionRecord] = []
@@ -227,22 +234,16 @@ class SessionTracker:
     def _interpretation_criteria() -> list[CriterionRecord]:
         return [
             CriterionRecord(
-                "CR4",
-                "Reconoce el efecto de la convolución circular.",
-                CriterionStatus.TEACHER_REVIEW,
-                "Respuesta sobre el caso N = 3 registrada en el Paso 5.",
-            ),
-            CriterionRecord(
                 "CR5",
-                "Explica la función del relleno con ceros al verificar la convolución lineal.",
+                "Compara los resultados y reconoce la función del relleno con ceros.",
                 CriterionStatus.TEACHER_REVIEW,
-                "Respuesta de interpretación registrada en el Paso 5.",
+                "Respuestas de comparación registradas en el Paso 5.",
             ),
             CriterionRecord(
                 "CR6",
-                "Relaciona la convolución temporal con la multiplicación espectral.",
+                "Reconoce la convolución circular y relaciona tiempo y frecuencia.",
                 CriterionStatus.TEACHER_REVIEW,
-                "Respuesta de interpretación y conclusión registradas en el Paso 5.",
+                "Respuestas conceptuales registradas en el Paso 5.",
             ),
         ]
 

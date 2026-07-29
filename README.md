@@ -33,7 +33,7 @@ El desarrollo permite:
 - calcular la convolución lineal desde la interfaz y comprobar su gráfica;
 - verificar mediante DFT/FFT los casos `N = 3` y `N = 5`;
 - comparar visualmente el resultado circular con la convolución lineal;
-- calificar automáticamente cuatro preguntas sobre nueve puntos;
+- calificar automáticamente ocho preguntas sobre dieciocho puntos;
 - guardar la sesión en un archivo JSON;
 - generar un reporte PDF por estudiante y ejercicio;
 - calcular una nota automática de `0,0` a `5,0`.
@@ -145,9 +145,9 @@ sesiones ficticias en `session_outputs/`.
 
 ## Límites actuales
 
-Este repositorio no contiene todavía el paso final de interpretación dentro de
-la interfaz, la evaluación gráfica integrada, la integración de voz ni los
-otros once ejercicios. También falta definir el mecanismo definitivo de
-almacenamiento y la forma de consulta del reporte.
+Este repositorio no contiene todavía el reporte docente corto integrado, el
+generador inicial de señales, la integración de voz ni los otros once
+ejercicios. También falta definir el mecanismo definitivo de almacenamiento y
+la forma de consulta del reporte.
 
 El código y la documentación se mantienen en un repositorio privado mientras se definen las condiciones institucionales de uso y distribución.

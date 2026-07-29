@@ -70,6 +70,22 @@ def _build_c3_3_questions() -> tuple[QuestionDefinition, ...]:
             question_id="P1",
             question_type=QuestionType.NUMERIC,
             prompt=(
+                f"Ingresa, en este orden, Lx, Lh y Ly para x[n] = {x_values} "
+                f"y h[n] = {h_values}."
+            ),
+            points=3,
+            criterion_ids=("CR1",),
+            rae_id="RAE_C3",
+            expected_answer=(
+                results["Lx"],
+                results["Lh"],
+                results["Ly"],
+            ),
+        ),
+        QuestionDefinition(
+            question_id="P2",
+            question_type=QuestionType.NUMERIC,
+            prompt=(
                 f"Ingresa la convolución lineal y[n] de x[n] = {x_values} "
                 f"y h[n] = {h_values}."
             ),
@@ -79,7 +95,7 @@ def _build_c3_3_questions() -> tuple[QuestionDefinition, ...]:
             expected_answer=tuple(results["convolucion_lineal"]),
         ),
         QuestionDefinition(
-            question_id="P2",
+            question_id="P3",
             question_type=QuestionType.NUMERIC,
             prompt="Ingresa el resultado obtenido mediante DFT/FFT para N = 3.",
             points=3,
@@ -88,7 +104,16 @@ def _build_c3_3_questions() -> tuple[QuestionDefinition, ...]:
             expected_answer=tuple(results["resultado_N3"]),
         ),
         QuestionDefinition(
-            question_id="P3",
+            question_id="P4",
+            question_type=QuestionType.NUMERIC,
+            prompt="Ingresa el resultado obtenido mediante DFT/FFT para N = 5.",
+            points=3,
+            criterion_ids=("CR4",),
+            rae_id="RAE_C3",
+            expected_answer=tuple(results["resultado_N5"]),
+        ),
+        QuestionDefinition(
+            question_id="P5",
             question_type=QuestionType.MULTIPLE_CHOICE,
             prompt=(
                 "¿Qué explica correctamente la diferencia entre los resultados "
@@ -123,7 +148,53 @@ def _build_c3_3_questions() -> tuple[QuestionDefinition, ...]:
             ),
         ),
         QuestionDefinition(
-            question_id="P4",
+            question_id="P6",
+            question_type=QuestionType.MULTIPLE_CHOICE,
+            prompt=(
+                "¿Cuál es la función del relleno con ceros al verificar la "
+                "convolución lineal mediante DFT/FFT?"
+            ),
+            points=2,
+            criterion_ids=("CR5",),
+            rae_id="RAE_C3",
+            expected_answer="b",
+            options=(
+                (
+                    "a",
+                    "Modificar las amplitudes originales para que ambas "
+                    "señales tengan los mismos valores.",
+                ),
+                (
+                    "b",
+                    "Completar las secuencias hasta una longitud N igual o "
+                    "mayor que Lx + Lh - 1 para evitar el solapamiento circular.",
+                ),
+                (
+                    "c",
+                    "Aumentar la frecuencia de muestreo de las señales antes "
+                    "de calcular la DFT.",
+                ),
+                (
+                    "d",
+                    "Eliminar la transformada inversa del procedimiento de "
+                    "verificación.",
+                ),
+            ),
+        ),
+        QuestionDefinition(
+            question_id="P7",
+            question_type=QuestionType.TRUE_FALSE,
+            prompt=(
+                "La convolución circular obtenida con N = 3 conserva las cinco "
+                "muestras de la convolución lineal sin superposición."
+            ),
+            points=1,
+            criterion_ids=("CR6",),
+            rae_id="RAE_C3",
+            expected_answer=False,
+        ),
+        QuestionDefinition(
+            question_id="P8",
             question_type=QuestionType.TRUE_FALSE,
             prompt=(
                 "La convolución en el tiempo puede verificarse multiplicando las "
@@ -142,7 +213,7 @@ C3_3_QUESTIONS = _build_c3_3_questions()
 
 
 def get_c3_3_questions() -> tuple[QuestionDefinition, ...]:
-    """Devuelve la configuración vigente de las cuatro preguntas del C3-3."""
+    """Devuelve la configuración vigente de las ocho preguntas del C3-3."""
 
     return C3_3_QUESTIONS
 
@@ -178,7 +249,7 @@ def _is_correct(question: QuestionDefinition, answer: Any) -> bool:
 
 
 def evaluate_c3_3(answers: dict[str, Any]) -> EvaluationResult:
-    """Califica las cuatro respuestas del C3-3 sobre 9 puntos y nota 0,0–5,0."""
+    """Califica las ocho respuestas del C3-3 sobre 18 puntos y nota 0,0–5,0."""
 
     configured_ids = {question.question_id for question in C3_3_QUESTIONS}
     unknown_ids = set(answers) - configured_ids

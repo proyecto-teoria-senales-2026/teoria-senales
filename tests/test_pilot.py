@@ -26,6 +26,19 @@ from teoria_senales.storage.json_repository import JsonSessionRepository
 from teoria_senales.tracking.session_tracker import SessionTracker
 
 
+def correct_evaluation_answers() -> dict[str, object]:
+    return {
+        "P1": [3, 3, 5],
+        "P2": [1, 1, 1, 3, 2],
+        "P3": [4, 3, 1],
+        "P4": [1, 1, 1, 3, 2],
+        "P5": "c",
+        "P6": "b",
+        "P7": False,
+        "P8": True,
+    }
+
+
 class ConvolutionTests(unittest.TestCase):
     def setUp(self) -> None:
         self.exercise = ConvolutionPilot()
@@ -72,10 +85,10 @@ class ConvolutionTests(unittest.TestCase):
         self.assertTrue(self.exercise.validate("paso_3", accepted_answer))
         self.assertFalse(self.exercise.validate("paso_3", rejected_answer))
         self.assertTrue(
-            evaluate_c3_3({"P2": accepted_answer}).questions[1].correct
+            evaluate_c3_3({"P3": accepted_answer}).questions[2].correct
         )
         self.assertFalse(
-            evaluate_c3_3({"P2": rejected_answer}).questions[1].correct
+            evaluate_c3_3({"P3": rejected_answer}).questions[2].correct
         )
 
     def test_completed_step_does_not_register_a_duplicate_attempt(self) -> None:
@@ -117,19 +130,23 @@ class ConvolutionTests(unittest.TestCase):
             self.assertTrue(pdf_path.exists())
             self.assertGreater(pdf_path.stat().st_size, 5_000)
             session_data = json.loads(json_path.read_text(encoding="utf-8"))
-            self.assertEqual(session_data["evaluation"]["points_earned"], 9)
-            self.assertEqual(session_data["evaluation"]["points_possible"], 9)
+            self.assertEqual(session_data["evaluation"]["points_earned"], 18)
+            self.assertEqual(session_data["evaluation"]["points_possible"], 18)
             self.assertEqual(session_data["evaluation"]["grade"], 5.0)
-            self.assertEqual(len(session_data["evaluation"]["questions"]), 4)
+            self.assertEqual(len(session_data["evaluation"]["questions"]), 8)
 
     def test_evaluation_is_saved_with_results_by_criterion(self) -> None:
         tracker = SessionTracker("Ana", "EST-001", self.exercise)
         result = evaluate_c3_3(
             {
-                "P1": [1, 1, 1, 3, 2],
-                "P2": [4, 3, 0],
-                "P3": "c",
-                "P4": False,
+                "P1": [3, 3, 5],
+                "P2": [1, 1, 1, 3, 2],
+                "P3": [4, 3, 0],
+                "P4": [1, 1, 1, 3, 0],
+                "P5": "c",
+                "P6": "b",
+                "P7": False,
+                "P8": True,
             }
         )
         tracker.record_evaluation(result)
@@ -140,16 +157,16 @@ class ConvolutionTests(unittest.TestCase):
             session_data = json.loads(json_path.read_text(encoding="utf-8"))
 
         evaluation = session_data["evaluation"]
-        self.assertEqual(evaluation["points_earned"], 5)
-        self.assertEqual(evaluation["points_possible"], 9)
-        self.assertEqual(evaluation["grade"], 2.78)
+        self.assertEqual(evaluation["points_earned"], 12)
+        self.assertEqual(evaluation["points_possible"], 18)
+        self.assertEqual(evaluation["grade"], 3.33)
         self.assertEqual(
             [question["points_earned"] for question in evaluation["questions"]],
-            [3, 0, 2, 0],
+            [3, 3, 0, 0, 2, 2, 1, 1],
         )
         self.assertEqual(
             [criterion["criterion_id"] for criterion in evaluation["criteria"]],
-            ["CR2", "CR3", "CR4", "CR5", "CR6"],
+            ["CR1", "CR2", "CR3", "CR4", "CR5", "CR6"],
         )
         criteria_evaluation = {
             criterion["criterion_id"]: criterion
@@ -157,7 +174,7 @@ class ConvolutionTests(unittest.TestCase):
         }
         self.assertEqual(
             criteria_evaluation["CR3"]["question_ids"],
-            ["P2", "P3"],
+            ["P3", "P5"],
         )
 
         criteria = {
@@ -166,9 +183,9 @@ class ConvolutionTests(unittest.TestCase):
         }
         self.assertEqual(criteria["CR2"]["status"], "alcanzado")
         self.assertEqual(criteria["CR3"]["status"], "requiere_refuerzo")
-        self.assertEqual(criteria["CR4"]["status"], "alcanzado")
+        self.assertEqual(criteria["CR4"]["status"], "requiere_refuerzo")
         self.assertEqual(criteria["CR5"]["status"], "alcanzado")
-        self.assertEqual(criteria["CR6"]["status"], "requiere_refuerzo")
+        self.assertEqual(criteria["CR6"]["status"], "alcanzado")
         self.assertEqual(
             session_data["steps"]["paso_5"]["status"],
             "completado",
@@ -181,14 +198,7 @@ class ConvolutionTests(unittest.TestCase):
 
     def test_evaluation_completes_step_five_without_duplicate_records(self) -> None:
         tracker = SessionTracker("Ana", "EST-005", self.exercise)
-        result = evaluate_c3_3(
-            {
-                "P1": [1, 1, 1, 3, 2],
-                "P2": [4, 3, 1],
-                "P3": "c",
-                "P4": True,
-            }
-        )
+        result = evaluate_c3_3(correct_evaluation_answers())
 
         first_record = tracker.record_evaluation(result)
         second_record = tracker.record_evaluation(result)
@@ -199,7 +209,7 @@ class ConvolutionTests(unittest.TestCase):
         self.assertEqual(len(step.attempts), 1)
         self.assertEqual(
             step.attempts[0].feedback,
-            "Evaluación automática completada: 9/9 puntos.",
+            "Evaluación automática completada: 18/18 puntos.",
         )
 
     def test_repeated_student_code_creates_separate_session_files(self) -> None:
@@ -240,14 +250,7 @@ class ConvolutionTests(unittest.TestCase):
     def test_completed_evaluation_is_not_recovered_as_incomplete(self) -> None:
         tracker = SessionTracker("Ana", "EST-006", self.exercise)
         tracker.record_evaluation(
-            evaluate_c3_3(
-                {
-                    "P1": [1, 1, 1, 3, 2],
-                    "P2": [4, 3, 1],
-                    "P3": "c",
-                    "P4": True,
-                }
-            )
+            evaluate_c3_3(correct_evaluation_answers())
         )
         tracker.complete(self.exercise.expected_results)
 

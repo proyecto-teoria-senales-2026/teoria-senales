@@ -163,10 +163,14 @@ def run_demo(output_directory: str | Path) -> tuple[Path, Path]:
     )
     evaluation = evaluate_c3_3(
         {
-            "P1": [1, 1, 1, 3, 2],
-            "P2": [4, 3, 1],
-            "P3": "c",
-            "P4": True,
+            "P1": [3, 3, 5],
+            "P2": [1, 1, 1, 3, 2],
+            "P3": [4, 3, 1],
+            "P4": [1, 1, 1, 3, 2],
+            "P5": "c",
+            "P6": "b",
+            "P7": False,
+            "P8": True,
         }
     )
     tracker.record_evaluation(evaluation)
