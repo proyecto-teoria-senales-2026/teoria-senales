@@ -45,6 +45,42 @@ class StreamlitAppTests(unittest.TestCase):
     def find_button(app: AppTest, label: str):
         return next(button for button in app.button if button.label == label)
 
+    @staticmethod
+    def find_text_input(app: AppTest, label: str):
+        return next(
+            text_input
+            for text_input in app.text_input
+            if text_input.label == label
+        )
+
+    def advance_to_final_evaluation(self, app: AppTest) -> None:
+        app.number_input[0].set_value(3)
+        app.number_input[1].set_value(3)
+        app.number_input[2].set_value(5)
+        self.find_button(app, "Verificar respuesta").click()
+        app.run(timeout=10)
+
+        self.find_text_input(
+            app,
+            "Resultado de la convolución lineal",
+        ).set_value("1 1 1 3 2")
+        self.find_button(app, "Verificar convolución lineal").click()
+        app.run(timeout=10)
+
+        self.find_text_input(
+            app,
+            "Resultado mediante DFT/FFT con N = 3",
+        ).set_value("4 3 1")
+        self.find_button(app, "Verificar resultado con N = 3").click()
+        app.run(timeout=10)
+
+        self.find_text_input(
+            app,
+            "Resultado mediante DFT/FFT con N = 5",
+        ).set_value("1 1 1 3 2")
+        self.find_button(app, "Verificar resultado con N = 5").click()
+        app.run(timeout=10)
+
     def test_student_can_start_a_session(self) -> None:
         app = self.create_app()
 
@@ -446,11 +482,31 @@ class StreamlitAppTests(unittest.TestCase):
         tracker = recovered_app.session_state["c3_3_tracker"]
         self.assertEqual(tracker.session.session_id, original_id)
         self.assertEqual(
-            [text_input.value for text_input in recovered_app.text_input],
+            [
+                self.find_text_input(
+                    recovered_app,
+                    "Resultado de la convolución lineal",
+                ).value,
+                self.find_text_input(
+                    recovered_app,
+                    "Resultado mediante DFT/FFT con N = 3",
+                ).value,
+                self.find_text_input(
+                    recovered_app,
+                    "Resultado mediante DFT/FFT con N = 5",
+                ).value,
+            ],
             ["1, 1, 1, 3, 2", "4, 3, 1", "1, 1, 1, 3, 2"],
         )
         self.assertTrue(
-            all(text_input.disabled for text_input in recovered_app.text_input)
+            all(
+                self.find_text_input(recovered_app, label).disabled
+                for label in (
+                    "Resultado de la convolución lineal",
+                    "Resultado mediante DFT/FFT con N = 3",
+                    "Resultado mediante DFT/FFT con N = 5",
+                )
+            )
         )
         self.assertEqual(
             len(tracker.session.steps["paso_3"].attempts),
@@ -459,6 +515,128 @@ class StreamlitAppTests(unittest.TestCase):
         self.assertEqual(
             len(tracker.session.steps["paso_3"].help_requests),
             1,
+        )
+
+    def test_final_evaluation_requires_all_four_answers(self) -> None:
+        app = self.create_app()
+        app.text_input[0].set_value("EVALUACION-INCOMPLETA")
+        app.button[0].click()
+        app.run(timeout=10)
+        self.advance_to_final_evaluation(app)
+
+        self.find_button(app, "Calificar evaluación").click()
+        app.run(timeout=10)
+
+        self.assertFalse(app.exception)
+        self.assertTrue(
+            any("Completa P1 y P2" in warning.value for warning in app.warning)
+        )
+        tracker = app.session_state["c3_3_tracker"]
+        self.assertIsNone(tracker.session.evaluation)
+        self.assertEqual(
+            len(tracker.session.steps["paso_5"].attempts),
+            0,
+        )
+
+    def test_final_evaluation_requires_both_selected_answers(self) -> None:
+        app = self.create_app()
+        app.text_input[0].set_value("EVALUACION-SELECCIONES")
+        app.button[0].click()
+        app.run(timeout=10)
+        self.advance_to_final_evaluation(app)
+
+        self.find_text_input(app, "Respuesta numérica P1").set_value(
+            "1, 1, 1, 3, 2"
+        )
+        self.find_text_input(app, "Respuesta numérica P2").set_value("4, 3, 1")
+        self.find_button(app, "Calificar evaluación").click()
+        app.run(timeout=10)
+
+        self.assertFalse(app.exception)
+        self.assertTrue(
+            any(
+                "Selecciona una respuesta en P3 y P4" in warning.value
+                for warning in app.warning
+            )
+        )
+        tracker = app.session_state["c3_3_tracker"]
+        self.assertIsNone(tracker.session.evaluation)
+        self.assertIsNone(tracker.session.finished_at)
+
+    def test_final_evaluation_calculates_grade_and_finishes_session(self) -> None:
+        app = self.create_app()
+        app.text_input[0].set_value("EVALUACION-COMPLETA")
+        app.button[0].click()
+        app.run(timeout=10)
+        self.advance_to_final_evaluation(app)
+
+        self.find_text_input(app, "Respuesta numérica P1").set_value(
+            "1, 1, 1, 3, 2"
+        )
+        self.find_text_input(app, "Respuesta numérica P2").set_value("4, 3, 1")
+        app.radio[0].set_value(
+            next(option for option in app.radio[0].options if option.startswith("C."))
+        )
+        app.radio[1].set_value("Verdadero")
+        self.find_button(app, "Calificar evaluación").click()
+        app.run(timeout=10)
+
+        self.assertFalse(app.exception)
+        tracker = app.session_state["c3_3_tracker"]
+        evaluation = tracker.session.evaluation
+        self.assertIsNotNone(evaluation)
+        self.assertEqual(evaluation.points_earned, 9)
+        self.assertEqual(evaluation.points_possible, 9)
+        self.assertEqual(evaluation.grade, 5.0)
+        self.assertIsNotNone(tracker.session.finished_at)
+        self.assertEqual(
+            tracker.session.steps["paso_5"].status.value,
+            "completado",
+        )
+        self.assertEqual(len(tracker.session.steps["paso_5"].attempts), 1)
+        self.assertTrue(
+            any(
+                "Evaluación finalizada" in success.value
+                for success in app.success
+            )
+        )
+        verify_button = self.find_button(app, "Calificar evaluación")
+        self.assertTrue(verify_button.disabled)
+        verify_button.click()
+        app.run(timeout=10)
+        self.assertEqual(
+            len(
+                app.session_state["c3_3_tracker"]
+                .session.steps["paso_5"]
+                .attempts
+            ),
+            1,
+        )
+
+    def test_final_evaluation_applies_proportional_grade(self) -> None:
+        app = self.create_app()
+        app.text_input[0].set_value("EVALUACION-PARCIAL")
+        app.button[0].click()
+        app.run(timeout=10)
+        self.advance_to_final_evaluation(app)
+
+        self.find_text_input(app, "Respuesta numérica P1").set_value(
+            "1, 1, 1, 3, 2"
+        )
+        self.find_text_input(app, "Respuesta numérica P2").set_value("4, 3, 0")
+        app.radio[0].set_value(
+            next(option for option in app.radio[0].options if option.startswith("C."))
+        )
+        app.radio[1].set_value("Falso")
+        self.find_button(app, "Calificar evaluación").click()
+        app.run(timeout=10)
+
+        evaluation = app.session_state["c3_3_tracker"].session.evaluation
+        self.assertEqual(evaluation.points_earned, 5)
+        self.assertEqual(evaluation.grade, 2.78)
+        self.assertEqual(
+            [question.points_earned for question in evaluation.questions],
+            [3, 0, 2, 0],
         )
 
     def test_return_to_start_requires_confirmation(self) -> None:

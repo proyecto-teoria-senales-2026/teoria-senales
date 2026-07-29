@@ -42,6 +42,10 @@ Este documento deja por escrito qué se mantiene del planteamiento aprobado, qu�
   reconocer el solapamiento circular.
 - Cuarto paso guiado para verificar mediante DFT/FFT el caso `N = 5` y
   comparar su resultado con la convolución lineal.
+- Quinto paso integrado con las cuatro preguntas autocalificables, puntaje sobre
+  nueve y nota automática de `0,0` a `5,0`.
+- Cierre de la sesión al enviar la evaluación, con una sola evidencia por
+  pregunta y resultado por criterio.
 - Recuperación en pantalla de las respuestas, intentos y ayudas de los cuatro
   pasos numéricos.
 - Configuración única de las señales y los resultados esperados del C3-3.
@@ -64,5 +68,7 @@ Este documento deja por escrito qué se mantiene del planteamiento aprobado, qu�
 - Momento exacto en que se generará el PDF.
 - Mecanismo de publicación y control de acceso para el piloto con estudiantes.
 - Ajustes académicos que soliciten los tutores después de revisar el C3-3.
+- Confirmación de la cantidad definitiva de preguntas para extender el banco
+  después de validar la carga del piloto C3-3.
 
 Estas decisiones se mantienen separadas del núcleo numérico. Así pueden ajustarse más adelante sin rehacer el cálculo ni las reglas del ejercicio aprobado.

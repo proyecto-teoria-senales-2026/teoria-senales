@@ -22,6 +22,10 @@ from teoria_senales.app.web_session import (
     restore_student_session,
 )
 from teoria_senales.domain.models import StepStatus
+from teoria_senales.evaluation.autograding import (
+    evaluate_c3_3,
+    get_c3_3_questions,
+)
 from teoria_senales.feedback.progressive import feedback_for_attempt
 from teoria_senales.signal_processing.convolution import parse_numeric_sequence
 from teoria_senales.storage.json_repository import JsonSessionRepository
@@ -625,6 +629,183 @@ def render_step_four(tracker) -> None:
         )
 
 
+def saved_evaluation_answer(session, question_id: str):
+    if session.evaluation is None:
+        return None
+    for question in session.evaluation.questions:
+        if question.question_id == question_id:
+            return question.answer
+    return None
+
+
+def format_grade(value: float) -> str:
+    return f"{value:.2f}".replace(".", ",")
+
+
+def render_evaluation_summary(session) -> None:
+    evaluation = session.evaluation
+    if evaluation is None:
+        return
+
+    st.success("Evaluación finalizada. Las respuestas quedaron guardadas.")
+    points_column, grade_column = st.columns(2)
+    with points_column:
+        st.metric(
+            "Puntaje",
+            f"{evaluation.points_earned}/{evaluation.points_possible}",
+        )
+    with grade_column:
+        st.metric("Nota final", format_grade(evaluation.grade))
+
+    st.markdown("#### Resultado por pregunta")
+    question_rows = [
+        "| Pregunta | Resultado | Puntos |",
+        "|---|---|---:|",
+    ]
+    for result in evaluation.questions:
+        question_rows.append(
+            "| "
+            f"{result.question_id} | "
+            f"{'Correcta' if result.correct else 'Por reforzar'} | "
+            f"{result.points_earned}/{result.points_possible} |"
+        )
+    st.markdown("\n".join(question_rows))
+
+
+def render_step_five(tracker) -> None:
+    exercise = tracker.exercise
+    session = tracker.session
+    completed = session.evaluation is not None
+    questions = get_c3_3_questions()
+    questions_by_id = {
+        question.question_id: question for question in questions
+    }
+
+    st.divider()
+    st.progress(1.0, text="Paso 5 de 5 · Comparación e interpretación")
+    st.subheader("Compara e interpreta los resultados")
+    st.write(
+        "Responde las cuatro preguntas finales. La herramienta calificará "
+        "las respuestas sobre 9 puntos y calculará la nota de 0,0 a 5,0."
+    )
+    st.caption(
+        "La evaluación se envía una sola vez. Revisa todas las respuestas "
+        "antes de calificarlas."
+    )
+
+    p3_question = questions_by_id["P3"]
+    p3_options = tuple(
+        f"{code.upper()}. {text}" for code, text in p3_question.options
+    )
+    p3_codes = {
+        label: code
+        for label, (code, _) in zip(p3_options, p3_question.options)
+    }
+    saved_p3 = saved_evaluation_answer(session, "P3")
+    saved_p3_label = next(
+        (
+            label
+            for label, code in p3_codes.items()
+            if code == saved_p3
+        ),
+        None,
+    )
+    p3_index = (
+        p3_options.index(saved_p3_label)
+        if saved_p3_label in p3_options
+        else None
+    )
+
+    p4_options = ("Verdadero", "Falso")
+    saved_p4 = saved_evaluation_answer(session, "P4")
+    p4_index = (
+        0 if saved_p4 is True else 1 if saved_p4 is False else None
+    )
+
+    with st.form("final_evaluation"):
+        st.markdown(
+            f"**P1 · {questions_by_id['P1'].points} puntos**  \n"
+            f"{questions_by_id['P1'].prompt}"
+        )
+        p1_answer = st.text_input(
+            "Respuesta numérica P1",
+            value=saved_evaluation_answer(session, "P1") or "",
+            placeholder="Escribe las cinco muestras",
+            disabled=completed,
+        )
+
+        st.markdown(
+            f"**P2 · {questions_by_id['P2'].points} puntos**  \n"
+            f"{questions_by_id['P2'].prompt}"
+        )
+        p2_answer = st.text_input(
+            "Respuesta numérica P2",
+            value=saved_evaluation_answer(session, "P2") or "",
+            placeholder="Escribe las tres muestras",
+            disabled=completed,
+        )
+
+        st.markdown(
+            f"**P3 · {p3_question.points} puntos**  \n"
+            f"{p3_question.prompt}"
+        )
+        p3_answer = st.radio(
+            "Selecciona una respuesta en P3",
+            p3_options,
+            index=p3_index,
+            disabled=completed,
+        )
+
+        p4_question = questions_by_id["P4"]
+        st.markdown(
+            f"**P4 · {p4_question.points} punto**  \n"
+            f"{p4_question.prompt}"
+        )
+        p4_answer = st.radio(
+            "Selecciona una respuesta en P4",
+            p4_options,
+            index=p4_index,
+            disabled=completed,
+            horizontal=True,
+        )
+
+        submitted = st.form_submit_button(
+            "Calificar evaluación",
+            type="primary",
+            width="stretch",
+            disabled=completed,
+        )
+
+    if submitted and not completed:
+        if (
+            parse_numeric_sequence(p1_answer) is None
+            or parse_numeric_sequence(p2_answer) is None
+        ):
+            st.warning(
+                "Completa P1 y P2 únicamente con valores numéricos separados "
+                "por comas, espacios o punto y coma."
+            )
+            return
+        if p3_answer is None or p4_answer is None:
+            st.warning("Selecciona una respuesta en P3 y P4 antes de calificar.")
+            return
+
+        evaluation = evaluate_c3_3(
+            {
+                "P1": p1_answer,
+                "P2": p2_answer,
+                "P3": p3_codes[p3_answer],
+                "P4": p4_answer == "Verdadero",
+            }
+        )
+        tracker.record_evaluation(evaluation)
+        tracker.complete(exercise.expected_results)
+        save_active_session()
+        st.rerun()
+
+    render_evaluation_summary(session)
+
+
 def render_active_session() -> None:
     tracker = st.session_state[SESSION_KEY]
     session = tracker.session
@@ -642,6 +823,8 @@ def render_active_session() -> None:
         render_step_three(tracker)
     if session.steps["paso_3"].status == StepStatus.COMPLETED:
         render_step_four(tracker)
+    if session.steps["paso_4"].status == StepStatus.COMPLETED:
+        render_step_five(tracker)
 
     if not st.session_state.get(LEAVE_CONFIRMATION_KEY, False):
         if st.button("Volver al inicio"):

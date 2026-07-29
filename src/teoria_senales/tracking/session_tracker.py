@@ -99,6 +99,9 @@ class SessionTracker:
     def record_evaluation(self, result: EvaluationResult) -> EvaluationRecord:
         """Guarda respuestas, puntaje y evidencia por criterio en la sesión."""
 
+        if self.session.evaluation is not None:
+            return self.session.evaluation
+
         question_records = [
             EvaluationQuestionRecord(
                 question_id=question.question_id,
@@ -120,6 +123,22 @@ class SessionTracker:
             criteria=criterion_records,
         )
         self.session.evaluation = evaluation
+        step = self.session.steps["paso_5"]
+        step.attempts.append(
+            AttemptRecord(
+                number=1,
+                answer={
+                    question.question_id: question.answer
+                    for question in result.questions
+                },
+                correct=all(question.correct for question in result.questions),
+                feedback=(
+                    "Evaluación automática completada: "
+                    f"{result.points_earned}/{result.points_possible} puntos."
+                ),
+            )
+        )
+        step.status = StepStatus.COMPLETED
         return evaluation
 
     def complete(self, results: dict[str, Any]) -> SessionRecord:

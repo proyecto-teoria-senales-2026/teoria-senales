@@ -158,6 +158,38 @@ class ConvolutionTests(unittest.TestCase):
         self.assertEqual(criteria["CR4"]["status"], "alcanzado")
         self.assertEqual(criteria["CR5"]["status"], "alcanzado")
         self.assertEqual(criteria["CR6"]["status"], "requiere_refuerzo")
+        self.assertEqual(
+            session_data["steps"]["paso_5"]["status"],
+            "completado",
+        )
+        self.assertEqual(
+            len(session_data["steps"]["paso_5"]["attempts"]),
+            1,
+        )
+        self.assertIsNotNone(session_data["finished_at"])
+
+    def test_evaluation_completes_step_five_without_duplicate_records(self) -> None:
+        tracker = SessionTracker("Ana", "EST-005", self.exercise)
+        result = evaluate_c3_3(
+            {
+                "P1": [1, 1, 1, 3, 2],
+                "P2": [4, 3, 1],
+                "P3": "c",
+                "P4": True,
+            }
+        )
+
+        first_record = tracker.record_evaluation(result)
+        second_record = tracker.record_evaluation(result)
+        step = tracker.session.steps["paso_5"]
+
+        self.assertIs(second_record, first_record)
+        self.assertEqual(step.status.value, "completado")
+        self.assertEqual(len(step.attempts), 1)
+        self.assertEqual(
+            step.attempts[0].feedback,
+            "Evaluación automática completada: 9/9 puntos.",
+        )
 
     def test_repeated_student_code_creates_separate_session_files(self) -> None:
         first_tracker = SessionTracker("Ana", "EST-001", self.exercise)
@@ -193,6 +225,27 @@ class ConvolutionTests(unittest.TestCase):
                 second_tracker.session.session_id,
             )
             self.assertEqual(recovered_path, expected_path)
+
+    def test_completed_evaluation_is_not_recovered_as_incomplete(self) -> None:
+        tracker = SessionTracker("Ana", "EST-006", self.exercise)
+        tracker.record_evaluation(
+            evaluate_c3_3(
+                {
+                    "P1": [1, 1, 1, 3, 2],
+                    "P2": [4, 3, 1],
+                    "P3": "c",
+                    "P4": True,
+                }
+            )
+        )
+        tracker.complete(self.exercise.expected_results)
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            repository = JsonSessionRepository(temporary_directory)
+            repository.save(tracker.session)
+            recovered = repository.find_latest_incomplete("EST-006", "C3-3")
+
+        self.assertIsNone(recovered)
 
 
 if __name__ == "__main__":
