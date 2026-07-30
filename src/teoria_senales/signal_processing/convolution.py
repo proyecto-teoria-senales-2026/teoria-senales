@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
+import re
+from typing import Any
+
 import numpy as np
 from numpy.typing import ArrayLike, NDArray
+
+
+NUMERIC_TOLERANCE = 1e-6
 
 
 def linear_convolution(x: ArrayLike, h: ArrayLike) -> NDArray[np.float64]:
@@ -38,11 +44,51 @@ def minimum_transform_length(x: ArrayLike, h: ArrayLike) -> int:
     return len(np.asarray(x)) + len(np.asarray(h)) - 1
 
 
-def values_match(answer: ArrayLike, expected: ArrayLike, tolerance: float = 1e-9) -> bool:
+def parse_numeric_sequence(value: Any) -> NDArray[np.float64] | None:
+    """Convierte una respuesta común en una secuencia numérica válida."""
+
+    if isinstance(value, str):
+        normalized = value.strip()
+        for bracket in "[](){}":
+            normalized = normalized.replace(bracket, " ")
+        value = [
+            token
+            for token in re.split(r"[,;\s]+", normalized)
+            if token
+        ]
+
+    try:
+        values = np.asarray(value, dtype=float)
+    except (TypeError, ValueError):
+        return None
+
+    if (
+        values.ndim != 1
+        or values.size == 0
+        or not np.all(np.isfinite(values))
+    ):
+        return None
+    return values
+
+
+def values_match(
+    answer: Any,
+    expected: ArrayLike,
+    tolerance: float = NUMERIC_TOLERANCE,
+) -> bool:
     """Compara dos secuencias considerando longitud y tolerancia numérica."""
 
-    answer_array = np.asarray(answer, dtype=float)
+    answer_array = parse_numeric_sequence(answer)
     expected_array = np.asarray(expected, dtype=float)
-    return answer_array.shape == expected_array.shape and bool(
-        np.allclose(answer_array, expected_array, atol=tolerance, rtol=0.0)
+    return (
+        answer_array is not None
+        and answer_array.shape == expected_array.shape
+        and bool(
+            np.allclose(
+                answer_array,
+                expected_array,
+                atol=tolerance,
+                rtol=0.0,
+            )
+        )
     )
