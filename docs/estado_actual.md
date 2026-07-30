@@ -7,7 +7,11 @@ Este documento deja por escrito qué se mantiene del planteamiento aprobado, qu�
 1. El módulo conserva doce ejercicios, organizados en tres grupos de cuatro.
 2. La voz se incorpora dentro de los cuatro ejercicios del Componente 3. No crea ejercicios adicionales ni reemplaza el trabajo con señales sintéticas.
 3. El piloto corresponde al ejercicio C3-3 de convolución y conserva `x[n] = {1, 2, 1}`, `h[n] = {1, -1, 2}`, `N = 3` y `N = 5`.
-4. El estudiante desarrolla el procedimiento y explica los resultados. La herramienta se utiliza para visualizar, verificar y comparar.
+4. El estudiante desarrolla el procedimiento e interpreta los resultados durante
+   el recorrido guiado. La herramienta se utiliza para visualizar, verificar y
+   comparar. La evaluación y la nota final se obtienen únicamente mediante los
+   tres formatos autocalificables aprobados: respuesta numérica, selección
+   múltiple y verdadero/falso; no se solicitan respuestas abiertas.
 5. Los intentos, las correcciones y las ayudas se registran por cada paso.
 6. Al finalizar el ejercicio se genera un reporte PDF. El estudiante no debe preparar otro archivo.
 7. La evaluación del C3-3 utiliza ocho preguntas autocalificables: cuatro
