@@ -35,6 +35,8 @@ Este documento deja por escrito qué se mantiene del planteamiento aprobado, qu�
 - Recuperación de la última sesión incompleta o creación voluntaria de un nuevo
   intento.
 - Visualización numérica y gráfica de las señales `x[n]` y `h[n]`.
+- Explorador visual posterior a la evaluación para probar otras secuencias,
+  elegir `N` y comparar la convolución lineal con el resultado DFT/FFT.
 - Primer paso guiado para identificar `Lx`, `Lh` y `Ly`, con verificación,
   retroalimentación y registro de ayudas e intentos.
 - Segundo paso guiado para calcular y comprobar la convolución lineal.

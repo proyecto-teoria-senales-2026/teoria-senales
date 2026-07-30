@@ -33,6 +33,7 @@ from teoria_senales.reports.pdf_report import (
     report_filename,
 )
 from teoria_senales.signal_processing.convolution import parse_numeric_sequence
+from teoria_senales.signal_processing.explorer import explore_signals
 from teoria_senales.storage.json_repository import JsonSessionRepository
 
 
@@ -188,6 +189,90 @@ def render_signal_card(values: np.ndarray, signal_name: str) -> None:
     figure = create_signal_figure(values, signal_name)
     st.pyplot(figure, width="stretch")
     plt.close(figure)
+
+
+def render_signal_explorer() -> None:
+    st.divider()
+    st.subheader("Explorador de señales")
+    st.write(
+        "Prueba otras secuencias discretas y observa cómo cambia la "
+        "convolución. Este espacio no modifica la sesión ni la calificación."
+    )
+
+    with st.form("signal_explorer"):
+        x_column, h_column = st.columns(2)
+        with x_column:
+            x_value = st.text_input(
+                "Muestras de x[n]",
+                value="1, 2, 1",
+                help="Ingresa entre 2 y 8 valores separados por comas.",
+            )
+        with h_column:
+            h_value = st.text_input(
+                "Muestras de h[n]",
+                value="1, -1, 2",
+                help="Ingresa entre 2 y 8 valores separados por comas.",
+            )
+        transform_length = st.number_input(
+            "Longitud de transformación N",
+            min_value=2,
+            max_value=15,
+            value=5,
+            step=1,
+        )
+        generated = st.form_submit_button(
+            "Generar y comparar",
+            type="primary",
+            width="stretch",
+        )
+
+    if not generated:
+        st.caption(
+            "Elige las muestras y una longitud N para generar la comparación."
+        )
+        return
+
+    try:
+        exploration = explore_signals(
+            x_value,
+            h_value,
+            int(transform_length),
+        )
+    except ValueError as error:
+        st.warning(str(error))
+        return
+
+    input_x_column, input_h_column = st.columns(2)
+    with input_x_column:
+        render_signal_card(exploration.x, "x[n] explorada")
+    with input_h_column:
+        render_signal_card(exploration.h, "h[n] explorada")
+
+    st.markdown("#### Comparación de resultados")
+    linear_column, frequency_column = st.columns(2)
+    with linear_column:
+        render_signal_card(
+            exploration.linear_result,
+            "Convolución lineal",
+        )
+    with frequency_column:
+        render_signal_card(
+            exploration.frequency_result,
+            f"Resultado con N = {exploration.transform_length}",
+        )
+
+    if exploration.has_circular_overlap:
+        st.warning(
+            f"N = {exploration.transform_length} es menor que la longitud "
+            f"mínima {exploration.minimum_length}. El resultado presenta "
+            "solapamiento circular."
+        )
+    else:
+        st.success(
+            f"N = {exploration.transform_length} alcanza la longitud mínima "
+            f"{exploration.minimum_length}. El resultado frecuencial conserva "
+            "la convolución lineal."
+        )
 
 
 def render_access_screen() -> None:
@@ -819,6 +904,7 @@ def render_evaluation_summary(session) -> None:
         type="primary",
         width="stretch",
     )
+    render_signal_explorer()
 
 
 def render_evaluation_review(

@@ -148,6 +148,46 @@ class StreamlitAppTests(unittest.TestCase):
         )
         self.assertIn(tracker.session.session_id, session_path.name)
 
+    def test_completed_evaluation_opens_the_signal_explorer(self) -> None:
+        app = self.create_app()
+        app.text_input[0].set_value("EXPLORADOR-001")
+        app.button[0].click()
+        app.run(timeout=10)
+        self.advance_to_final_evaluation(app)
+        self.fill_complete_evaluation(app)
+        self.find_button(app, "Revisar respuestas").click()
+        app.run(timeout=10)
+        self.find_button(app, "Confirmar y calificar").click()
+        app.run(timeout=10)
+
+        self.assertFalse(app.exception)
+        self.assertIn(
+            "Explorador de señales",
+            [subheader.value for subheader in app.subheader],
+        )
+        self.assertIn(
+            "Generar y comparar",
+            [button.label for button in app.button],
+        )
+
+        self.find_text_input(app, "Muestras de x[n]").set_value("1, 1")
+        self.find_text_input(app, "Muestras de h[n]").set_value("1, 2")
+        next(
+            number_input
+            for number_input in app.number_input
+            if number_input.label == "Longitud de transformación N"
+        ).set_value(3)
+        self.find_button(app, "Generar y comparar").click()
+        app.run(timeout=10)
+
+        self.assertFalse(app.exception)
+        self.assertTrue(
+            any(
+                "alcanza la longitud mínima 3" in success.value
+                for success in app.success
+            )
+        )
+
     def test_empty_code_does_not_create_a_session(self) -> None:
         app = self.create_app()
 

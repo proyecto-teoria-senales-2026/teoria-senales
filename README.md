@@ -146,7 +146,12 @@ sesiones ficticias en `session_outputs/`.
 
 ## Límites actuales
 
-Este repositorio no contiene todavía el generador inicial de señales, la
+El primer avance del generador de señales está integrado como un explorador
+visual posterior a la evaluación. Permite ingresar dos secuencias discretas,
+elegir la longitud de transformación y comparar la convolución lineal con el
+resultado obtenido mediante DFT/FFT, sin modificar la sesión ni la nota.
+
+El repositorio no contiene todavía la
 integración de voz ni los otros once ejercicios. También falta definir el
 mecanismo definitivo de almacenamiento y el canal institucional para recibir y
 consultar los reportes.
