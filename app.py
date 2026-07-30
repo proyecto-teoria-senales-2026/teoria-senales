@@ -112,7 +112,7 @@ def apply_styles() -> None:
         }
         .block-container {
             max-width: 780px;
-            padding-top: 2rem;
+            padding-top: 5rem;
             padding-bottom: 3rem;
         }
         [data-testid="stForm"] {
