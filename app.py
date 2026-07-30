@@ -31,6 +31,7 @@ from teoria_senales.feedback.progressive import feedback_for_attempt
 from teoria_senales.reports.pdf_report import (
     generate_pdf_report_bytes,
     report_filename,
+    report_verification_code,
 )
 from teoria_senales.signal_processing.convolution import parse_numeric_sequence
 from teoria_senales.signal_processing.explorer import explore_signals
@@ -897,12 +898,17 @@ def render_evaluation_summary(session) -> None:
     st.markdown("\n".join(criterion_rows))
 
     st.download_button(
-        "Descargar reporte docente",
+        "Descargar reporte docente protegido",
         data=generate_pdf_report_bytes(session),
         file_name=report_filename(session),
         mime="application/pdf",
         type="primary",
         width="stretch",
+    )
+    st.caption(
+        "Código de verificación: "
+        f"`{report_verification_code(session)}`. El docente puede compararlo "
+        "con el registro original de la sesión."
     )
     render_signal_explorer()
 

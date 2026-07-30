@@ -6,7 +6,10 @@ import json
 import sys
 import tempfile
 import unittest
+from io import BytesIO
 from pathlib import Path
+
+from pypdf import PdfReader
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -17,6 +20,10 @@ if str(SRC) not in sys.path:
 from teoria_senales.app.pilot_cli import run_demo
 from teoria_senales.evaluation.autograding import evaluate_c3_3
 from teoria_senales.exercises.convolution_pilot import ConvolutionPilot
+from teoria_senales.reports.pdf_report import (
+    generate_pdf_report_bytes,
+    report_verification_code,
+)
 from teoria_senales.signal_processing.convolution import (
     frequency_domain_convolution,
     linear_convolution,
@@ -141,6 +148,30 @@ class ConvolutionTests(unittest.TestCase):
             self.assertEqual(len(session_data["evaluation"]["questions"]), 8)
             self.assertNotIn("interpretation_answers", session_data)
             self.assertNotIn("conclusion", session_data)
+
+            reader = PdfReader(pdf_path)
+            self.assertTrue(reader.is_encrypted)
+            self.assertEqual(reader.decrypt(""), 1)
+            self.assertIn(
+                "Código de verificación",
+                "\n".join(page.extract_text() or "" for page in reader.pages),
+            )
+
+    def test_report_verification_code_is_stable_and_detects_changes(self) -> None:
+        tracker = SessionTracker("Ana", "EST-VERIFICACION", self.exercise)
+        tracker.record_evaluation(evaluate_c3_3(correct_evaluation_answers()))
+        session = tracker.complete(self.exercise.expected_results)
+
+        first_code = report_verification_code(session)
+        second_code = report_verification_code(session)
+        protected_pdf = generate_pdf_report_bytes(session)
+
+        self.assertEqual(first_code, second_code)
+        self.assertRegex(first_code, r"^[0-9A-F]{4}(?:-[0-9A-F]{4}){3}$")
+        self.assertTrue(PdfReader(BytesIO(protected_pdf)).is_encrypted)
+
+        session.student_id = "EST-ALTERADO"
+        self.assertNotEqual(report_verification_code(session), first_code)
 
     def test_incorrect_p5_does_not_change_cr3_or_cr4(self) -> None:
         tracker = SessionTracker("Ana", "EST-001", self.exercise)

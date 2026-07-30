@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
+import secrets
 from io import BytesIO
 from pathlib import Path
 
 import reportlab
+from pypdf import PdfReader, PdfWriter
+from pypdf.constants import UserAccessPermissions
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
@@ -91,6 +96,18 @@ def report_filename(session: SessionRecord) -> str:
     )
 
 
+def report_verification_code(session: SessionRecord) -> str:
+    """Genera una huella reproducible del registro completo de la sesión."""
+    canonical_record = json.dumps(
+        session.to_dict(),
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    digest = hashlib.sha256(canonical_record).hexdigest()[:16].upper()
+    return "-".join(digest[index : index + 4] for index in range(0, 16, 4))
+
+
 def _build_report(session: SessionRecord, destination: str | BytesIO) -> None:
     if session.evaluation is None or session.finished_at is None:
         raise ValueError(
@@ -159,6 +176,7 @@ def _build_report(session: SessionRecord, destination: str | BytesIO) -> None:
     identity_data = [
         ["Código estudiantil", session.student_id],
         ["Código de sesión", session.session_id],
+        ["Código de verificación", report_verification_code(session)],
         ["Ejercicio", f"{session.exercise_id} - {session.exercise_title}"],
         ["RAE", _rae_id(session)],
         ["Fecha de finalización", _format_date(session.finished_at)],
@@ -260,7 +278,13 @@ def _build_report(session: SessionRecord, destination: str | BytesIO) -> None:
         summary_table,
         Paragraph("Resultado por criterio", styles["Section"]),
         criteria_table,
-        Spacer(1, 6),
+        Spacer(1, 8),
+        Paragraph(
+            "La autenticidad se comprueba comparando el código de verificación "
+            "con el registro original de la sesión. La protección del archivo "
+            "restringe su modificación, pero no reemplaza esa comprobación.",
+            styles["TableText"],
+        ),
     ]
 
     def add_page_chrome(canvas: object, doc: object) -> None:
@@ -292,10 +316,32 @@ def _build_report(session: SessionRecord, destination: str | BytesIO) -> None:
     )
 
 
+def _protect_pdf(pdf_data: bytes) -> bytes:
+    """Restringe la modificación sin pedir contraseña para abrir el archivo."""
+    reader = PdfReader(BytesIO(pdf_data))
+    writer = PdfWriter()
+    writer.clone_document_from_reader(reader)
+    permissions = (
+        UserAccessPermissions.PRINT
+        | UserAccessPermissions.PRINT_TO_REPRESENTATION
+        | UserAccessPermissions.EXTRACT
+        | UserAccessPermissions.EXTRACT_TEXT_AND_GRAPHICS
+    )
+    writer.encrypt(
+        user_password="",
+        owner_password=secrets.token_urlsafe(32),
+        permissions_flag=permissions,
+        algorithm="AES-256",
+    )
+    protected = BytesIO()
+    writer.write(protected)
+    return protected.getvalue()
+
+
 def generate_pdf_report_bytes(session: SessionRecord) -> bytes:
     buffer = BytesIO()
     _build_report(session, buffer)
-    return buffer.getvalue()
+    return _protect_pdf(buffer.getvalue())
 
 
 def generate_pdf_report(

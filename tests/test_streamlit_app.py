@@ -777,7 +777,7 @@ class StreamlitAppTests(unittest.TestCase):
         self.assertEqual(len(download_buttons), 1)
         self.assertEqual(
             download_buttons[0].label,
-            "Descargar reporte docente",
+            "Descargar reporte docente protegido",
         )
         self.assertEqual(
             len(

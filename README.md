@@ -35,14 +35,16 @@ El desarrollo permite:
 - comparar visualmente el resultado circular con la convolución lineal;
 - calificar automáticamente ocho preguntas sobre dieciocho puntos;
 - guardar la sesión en un archivo JSON;
-- generar un reporte docente corto por estudiante, ejercicio e intento;
+- generar un reporte docente corto y protegido por estudiante, ejercicio e
+  intento, con un código de verificación asociado al registro original;
 - calcular una nota automática de `0,0` a `5,0`.
 
 La interacción por consola se conserva como apoyo para las pruebas. La interfaz
 gráfica ya permite desarrollar los cuatro pasos numéricos, responder la
 evaluación de ocho preguntas y revisar la calificación antes del envío
 definitivo. Al terminar, muestra el resultado por criterio y permite descargar
-el reporte docente. Los avances se guardan después de cada interacción.
+el reporte docente protegido. Los avances se guardan después de cada
+interacción.
 
 ## Estructura del repositorio
 
