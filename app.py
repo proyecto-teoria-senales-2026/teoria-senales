@@ -1222,7 +1222,8 @@ def main() -> None:
         layout="centered",
     )
     apply_styles()
-    st.image(str(HEADER_IMAGE), width="stretch")
+    if HEADER_IMAGE.is_file():
+        st.image(str(HEADER_IMAGE), width="stretch")
 
     if SESSION_KEY in st.session_state:
         render_active_session()
