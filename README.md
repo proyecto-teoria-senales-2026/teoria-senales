@@ -35,13 +35,14 @@ El desarrollo permite:
 - comparar visualmente el resultado circular con la convolución lineal;
 - calificar automáticamente ocho preguntas sobre dieciocho puntos;
 - guardar la sesión en un archivo JSON;
-- generar un reporte PDF por estudiante y ejercicio;
+- generar un reporte docente corto por estudiante, ejercicio e intento;
 - calcular una nota automática de `0,0` a `5,0`.
 
 La interacción por consola se conserva como apoyo para las pruebas. La interfaz
 gráfica ya permite desarrollar los cuatro pasos numéricos, responder la
 evaluación de ocho preguntas y revisar la calificación antes del envío
-definitivo. Los avances se guardan después de cada interacción.
+definitivo. Al terminar, muestra el resultado por criterio y permite descargar
+el reporte docente. Los avances se guardan después de cada interacción.
 
 ## Estructura del repositorio
 
@@ -145,9 +146,9 @@ sesiones ficticias en `session_outputs/`.
 
 ## Límites actuales
 
-Este repositorio no contiene todavía el reporte docente corto integrado, el
-generador inicial de señales, la integración de voz ni los otros once
-ejercicios. También falta definir el mecanismo definitivo de almacenamiento y
-la forma de consulta del reporte.
+Este repositorio no contiene todavía el generador inicial de señales, la
+integración de voz ni los otros once ejercicios. También falta definir el
+mecanismo definitivo de almacenamiento y el canal institucional para recibir y
+consultar los reportes.
 
 El código y la documentación se mantienen en un repositorio privado mientras se definen las condiciones institucionales de uso y distribución.

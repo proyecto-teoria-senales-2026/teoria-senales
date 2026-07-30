@@ -89,7 +89,7 @@ def run_interactive(output_directory: str | Path) -> tuple[Path, Path]:
     print(f"x[n] = {exercise.x.astype(int).tolist()}")
     print(f"h[n] = {exercise.h.astype(int).tolist()}")
     student_name = input("Nombre del estudiante: ")
-    student_id = input("Identificación: ")
+    student_id = input("Código estudiantil: ")
     tracker = SessionTracker(student_name, student_id, exercise)
 
     _run_validated_step(

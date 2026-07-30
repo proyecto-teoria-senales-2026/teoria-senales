@@ -28,6 +28,10 @@ from teoria_senales.evaluation.autograding import (
     get_c3_3_questions,
 )
 from teoria_senales.feedback.progressive import feedback_for_attempt
+from teoria_senales.reports.pdf_report import (
+    generate_pdf_report_bytes,
+    report_filename,
+)
 from teoria_senales.signal_processing.convolution import parse_numeric_sequence
 from teoria_senales.storage.json_repository import JsonSessionRepository
 
@@ -791,6 +795,31 @@ def render_evaluation_summary(session) -> None:
         )
     st.markdown("\n".join(question_rows))
 
+    st.markdown("#### Resultado por criterio")
+    criterion_rows = [
+        "| Criterio | Resultado |",
+        "|---|---|",
+    ]
+    for criterion in session.criteria:
+        status = (
+            "Alcanzado"
+            if criterion.status.value == "alcanzado"
+            else "Requiere refuerzo"
+        )
+        criterion_rows.append(
+            f"| {criterion.criterion_id} | {status} |"
+        )
+    st.markdown("\n".join(criterion_rows))
+
+    st.download_button(
+        "Descargar reporte docente",
+        data=generate_pdf_report_bytes(session),
+        file_name=report_filename(session),
+        mime="application/pdf",
+        type="primary",
+        width="stretch",
+    )
+
 
 def render_evaluation_review(
     tracker,
@@ -940,7 +969,7 @@ def render_step_five(tracker) -> None:
                 )
 
         submitted = st.form_submit_button(
-            "Calificar evaluación",
+            "Revisar respuestas",
             type="primary",
             width="stretch",
         )

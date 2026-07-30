@@ -61,7 +61,9 @@ Este documento deja por escrito qué se mantiene del planteamiento aprobado, qu�
 - Manejo de texto no numérico o respuestas vacías en los pasos 2, 3 y 4 sin
   interrumpir la aplicación ni alterar el historial con intentos vacíos.
 - Entorno local reconstruido y verificable mediante `python -m pip check`.
-- Generación del reporte PDF con resultados, gráficas y criterios.
+- Generación del reporte docente corto con código estudiantil, código de
+  sesión, RAE, puntaje, nota y resultado por criterio.
+- Descarga del reporte docente al finalizar la evaluación.
 - Pruebas automáticas del cálculo, la evaluación, la interfaz y los archivos
   generados.
 - Uso de carpetas temporales para que las pruebas de interfaz no dejen sesiones
@@ -71,8 +73,7 @@ Este documento deja por escrito qué se mantiene del planteamiento aprobado, qu�
 
 - Permanencia de JSON o migración posterior a SQLite.
 - Uso de archivo de audio, micrófono o ambas alternativas.
-- Forma en que el docente consultará el reporte.
-- Momento exacto en que se generará el PDF.
+- Canal institucional en el que el docente recibirá o consultará el reporte.
 - Mecanismo de publicación y control de acceso para el piloto con estudiantes.
 - Ajustes académicos que soliciten los tutores después de revisar el C3-3.
 

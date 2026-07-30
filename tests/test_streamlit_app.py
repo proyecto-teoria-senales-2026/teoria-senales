@@ -582,7 +582,7 @@ class StreamlitAppTests(unittest.TestCase):
         app.run(timeout=10)
         self.advance_to_final_evaluation(app)
 
-        self.find_button(app, "Calificar evaluación").click()
+        self.find_button(app, "Revisar respuestas").click()
         app.run(timeout=10)
 
         self.assertFalse(app.exception)
@@ -636,7 +636,7 @@ class StreamlitAppTests(unittest.TestCase):
         )
 
         self.fill_complete_evaluation(app)
-        self.find_button(app, "Calificar evaluación").click()
+        self.find_button(app, "Revisar respuestas").click()
         app.run(timeout=10)
 
         self.assertIsNone(
@@ -675,7 +675,7 @@ class StreamlitAppTests(unittest.TestCase):
         self.advance_to_final_evaluation(app)
 
         self.fill_numeric_evaluation_answers(app)
-        self.find_button(app, "Calificar evaluación").click()
+        self.find_button(app, "Revisar respuestas").click()
         app.run(timeout=10)
 
         self.assertFalse(app.exception)
@@ -697,7 +697,7 @@ class StreamlitAppTests(unittest.TestCase):
         self.advance_to_final_evaluation(app)
 
         self.fill_complete_evaluation(app)
-        self.find_button(app, "Calificar evaluación").click()
+        self.find_button(app, "Revisar respuestas").click()
         app.run(timeout=10)
 
         self.assertIsNone(
@@ -730,8 +730,14 @@ class StreamlitAppTests(unittest.TestCase):
             )
         )
         self.assertNotIn(
-            "Calificar evaluación",
+            "Revisar respuestas",
             [button.label for button in app.button],
+        )
+        download_buttons = app.get("download_button")
+        self.assertEqual(len(download_buttons), 1)
+        self.assertEqual(
+            download_buttons[0].label,
+            "Descargar reporte docente",
         )
         self.assertEqual(
             len(
@@ -762,7 +768,7 @@ class StreamlitAppTests(unittest.TestCase):
         )
         app.radio[2].set_value("Falso")
         app.radio[3].set_value("Verdadero")
-        self.find_button(app, "Calificar evaluación").click()
+        self.find_button(app, "Revisar respuestas").click()
         app.run(timeout=10)
         self.find_button(app, "Confirmar y calificar").click()
         app.run(timeout=10)

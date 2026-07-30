@@ -129,6 +129,11 @@ class ConvolutionTests(unittest.TestCase):
             self.assertTrue(json_path.exists())
             self.assertTrue(pdf_path.exists())
             self.assertGreater(pdf_path.stat().st_size, 5_000)
+            self.assertTrue(
+                pdf_path.name.startswith(
+                    "reporte_docente_DEMO-001_C3-3_"
+                )
+            )
             session_data = json.loads(json_path.read_text(encoding="utf-8"))
             self.assertEqual(session_data["evaluation"]["points_earned"], 18)
             self.assertEqual(session_data["evaluation"]["points_possible"], 18)
