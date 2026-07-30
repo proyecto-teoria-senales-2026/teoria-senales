@@ -29,6 +29,11 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip check
 
+      - name: Preparar gráficas
+        env:
+          MPLBACKEND: Agg
+        run: python -c "import matplotlib.pyplot as plt; fig = plt.figure(); plt.close(fig); print('Graficas preparadas')"
+
       - name: Ejecutar pruebas
         env:
           MPLBACKEND: Agg
