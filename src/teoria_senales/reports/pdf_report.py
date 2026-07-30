@@ -289,16 +289,32 @@ def _build_report(session: SessionRecord, destination: str | BytesIO) -> None:
 
     def add_page_chrome(canvas: object, doc: object) -> None:
         canvas.saveState()
-        header_height = A4[0] * 108 / 838
-        canvas.drawImage(
-            str(HEADER_IMAGE),
-            0,
-            A4[1] - header_height,
-            width=A4[0],
-            height=header_height,
-            preserveAspectRatio=False,
-            mask="auto",
-        )
+        if HEADER_IMAGE.is_file():
+            header_height = A4[0] * 108 / 838
+            canvas.drawImage(
+                str(HEADER_IMAGE),
+                0,
+                A4[1] - header_height,
+                width=A4[0],
+                height=header_height,
+                preserveAspectRatio=False,
+                mask="auto",
+            )
+        else:
+            canvas.setFillColor(NAVY)
+            canvas.setFont(BOLD_FONT, 11)
+            canvas.drawString(
+                1.7 * cm,
+                A4[1] - 1.35 * cm,
+                "Universidad de Ibagué · Teoría de Señales",
+            )
+            canvas.setStrokeColor(colors.HexColor("#B7C6D8"))
+            canvas.line(
+                1.7 * cm,
+                A4[1] - 1.65 * cm,
+                A4[0] - 1.7 * cm,
+                A4[1] - 1.65 * cm,
+            )
         canvas.setFont(REGULAR_FONT, 7.5)
         canvas.setFillColor(colors.HexColor("#667085"))
         canvas.drawString(1.7 * cm, 0.8 * cm, "Proyecto Teoría de Señales")
