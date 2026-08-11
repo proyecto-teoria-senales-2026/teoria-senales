@@ -19,6 +19,9 @@ dist/
 
 # Evidencias generadas durante la ejecución
 /demo_outputs/
+/session_outputs/
+/tmp/
+*.tmp
 
 # Configuración local de editores
 .idea/

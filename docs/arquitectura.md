@@ -8,7 +8,10 @@ La propuesta separa el software por responsabilidades. De este modo, la interfaz
 
 - **Presentación:** recibe las respuestas y muestra señales, gráficas, ayudas y retroalimentación.
 - **Gestor de ejercicios:** controla la secuencia de pasos, las reglas y el estado de la sesión.
-- **Fuentes de señal:** suministra señales sintéticas y, cuando se valide su mecanismo, segmentos de voz para el Componente 3.
+- **Fuentes de señal:** suministra señales sintéticas y capta segmentos de voz
+  mediante el micrófono desde la interfaz Streamlit para los cuatro ejercicios
+  del Componente 3. Sus parámetros técnicos se definirán durante la
+  implementación.
 - **Procesamiento:** ejecuta convolución, DFT/FFT y las operaciones numéricas de cada ejercicio.
 - **Validación y retroalimentación:** comprueba respuestas objetivas y entrega orientaciones progresivas.
 - **Seguimiento:** registra intentos, correcciones, ayudas, respuestas y criterios.
