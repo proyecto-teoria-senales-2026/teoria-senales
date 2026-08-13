@@ -223,8 +223,6 @@ def render_access_screen() -> None:
             "Iniciar ejercicio C-1-1", type="primary", width="stretch"
         )
     if not submitted:
-        if st.button("Ir al ejercicio C-3-3"):
-            st.switch_page("app.py")
         return
 
     try:
