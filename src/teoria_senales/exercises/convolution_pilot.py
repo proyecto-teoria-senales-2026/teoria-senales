@@ -58,7 +58,7 @@ class ConvolutionPilot:
         ),
         StepDefinition(
             "paso_5",
-            "Comparación e interpretación",
+            "Evaluación automática",
             "Relaciona la longitud N con el tipo de convolución obtenido.",
             "Relación entre convolución temporal y multiplicación espectral.",
         ),
