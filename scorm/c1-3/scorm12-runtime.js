@@ -165,13 +165,14 @@
     ].every(Boolean);
   }
 
-  function reportScore({ score, passingScore = 60, completed = true }) {
+  function reportScore({ score, passingScore = 3, maximumScore = 5, completed = true }) {
     if (!initialized) return false;
-    const raw = Math.max(0, Math.min(100, Math.round(score * 100) / 100));
+    const maximum = Math.max(1, Number(maximumScore) || 5);
+    const raw = Math.max(0, Math.min(maximum, Math.round(score * 100) / 100));
     const status = completed ? (raw >= passingScore ? "passed" : "failed") : "incomplete";
     const results = [
       setValue("cmi.core.score.min", "0"),
-      setValue("cmi.core.score.max", "100"),
+      setValue("cmi.core.score.max", maximum),
       setValue("cmi.core.score.raw", raw),
       setValue("cmi.core.lesson_status", status),
     ];
