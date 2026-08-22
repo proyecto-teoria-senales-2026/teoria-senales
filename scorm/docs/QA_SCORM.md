@@ -52,3 +52,7 @@ estudiante y uno docente:
 La evidencia debe permitir comprobar que la nota que visualiza el estudiante
 coincide con la que Moodle registra. Cualquier divergencia bloquea la entrega
 del paquete hasta su corrección.
+
+## Distribución
+
+El ZIP listo para cargar se conserva en `scorm/dist/`; las fuentes permanecen en `scorm/c1-1/` para trazabilidad y mantenimiento.
