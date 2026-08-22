@@ -1,7 +1,8 @@
 (() => {
   "use strict";
 
-  const PASSING_SCORE = 60;
+  const PASSING_SCORE = 3;
+  const OBJECTIVE_PASSING_SCORE = 60;
   const content = document.querySelector("#application-content");
   const nameNode = document.querySelector("#student-name");
   const runtime = window.TeoriaSenalesScorm12;
@@ -142,7 +143,7 @@
 
   function renderEvaluation() {
     const questions = selectQuestions(state.seed);
-    content.innerHTML = `<section class="card stack">${heading(5)}<h2>Evaluación final</h2><p>Responde las cinco preguntas asignadas. La calificación se enviará a Moodle en escala técnica de 0 a 100.</p><form id="evaluation-form" class="stack">${questions.map(([id, type, prompt, expected, options]) => `<fieldset><legend>${id} · ${prompt}</legend><div class="options">${type === "mc" ? options.map(([key, label]) => `<label class="option"><input type="radio" name="${id}" value="${key}">${key.toUpperCase()}. ${label}</label>`).join("") : `<label class="option"><input type="radio" name="${id}" value="true">Verdadero</label><label class="option"><input type="radio" name="${id}" value="false">Falso</label>`}</div></fieldset>`).join("")}<div class="actions"><button type="submit">Calificar y finalizar</button></div></form>${feedback(state.feedback, state.feedbackKind || "info")}</section>`;
+    content.innerHTML = `<section class="card stack">${heading(5)}<h2>Evaluación final</h2><p>Responde las cinco preguntas asignadas. La calificación final se registra en Moodle en la escala de 0,0 a 5,0.</p><form id="evaluation-form" class="stack">${questions.map(([id, type, prompt, expected, options]) => `<fieldset><legend>${id} · ${prompt}</legend><div class="options">${type === "mc" ? options.map(([key, label]) => `<label class="option"><input type="radio" name="${id}" value="${key}">${key.toUpperCase()}. ${label}</label>`).join("") : `<label class="option"><input type="radio" name="${id}" value="true">Verdadero</label><label class="option"><input type="radio" name="${id}" value="false">Falso</label>`}</div></fieldset>`).join("")}<div class="actions"><button type="submit">Calificar y finalizar</button></div></form>${feedback(state.feedback, state.feedbackKind || "info")}</section>`;
     document.querySelector("#evaluation-form").addEventListener("submit", (event) => { event.preventDefault(); gradeEvaluation(questions); });
   }
 
@@ -172,12 +173,12 @@
       if (correct) correctCount += 1;
     });
     state.evaluated = true;
-    state.score = correctCount * 20;
+    state.score = correctCount;
     state.completedAt = new Date().toISOString();
     state.feedback = null;
     runtime.setProgress(100);
     Object.entries(criterionResults).forEach(([id, result]) => {
-      runtime.recordObjective({ id, score: (result.correct / result.total) * 100, passingScore: PASSING_SCORE });
+      runtime.recordObjective({ id, score: (result.correct / result.total) * 100, passingScore: OBJECTIVE_PASSING_SCORE });
     });
     runtime.reportScore({ score: state.score, passingScore: PASSING_SCORE, completed: true });
     save();
@@ -186,7 +187,7 @@
 
   function renderResult() {
     const status = state.score >= PASSING_SCORE ? "Actividad aprobada" : "Actividad finalizada";
-    content.innerHTML = `<section class="card stack"><p class="eyebrow">Resultado registrado</p><h2>${status}</h2><p class="score">${state.score} / 100</p><p>Finalización registrada: <strong>${formatDateTime(state.completedAt || new Date().toISOString())}</strong>.</p><p>La actividad envió a Moodle la nota, el estado de finalización, el avance, las interacciones y los resultados por criterio.</p><div class="notice">El docente consulta el resultado y la fecha/hora oficial del intento directamente desde Moodle. No necesitas descargar ni entregar un archivo adicional.</div><div class="actions"><button id="finish">Finalizar y salir</button></div></section>`;
+    content.innerHTML = `<section class="card stack"><p class="eyebrow">Resultado registrado</p><h2>${status}</h2><p class="score">${state.score.toFixed(2).replace(".", ",")} / 5,0</p><p>Finalización registrada: <strong>${formatDateTime(state.completedAt || new Date().toISOString())}</strong>.</p><p>La actividad envió a Moodle la nota, el estado de finalización, el avance, las interacciones y los resultados por criterio.</p><div class="notice">El docente consulta el resultado y la fecha/hora oficial del intento directamente desde Moodle. No necesitas descargar ni entregar un archivo adicional.</div><div class="actions"><button id="finish">Finalizar y salir</button></div></section>`;
     document.querySelector("#finish").addEventListener("click", () => { runtime.finish(); content.querySelector("#finish").textContent = "Actividad finalizada"; content.querySelector("#finish").disabled = true; });
   }
 
