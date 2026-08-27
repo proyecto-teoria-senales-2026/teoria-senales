@@ -22,10 +22,17 @@ class StreamlitSmokeTests(unittest.TestCase):
             msg=f"No se renderizó el encabezado institucional en {relative_path}",
         )
 
-    def test_c3_3_entrypoint(self):
+    def test_application_entrypoint(self):
         app = self._run("app.py")
-        self.assertTrue(any("Convolución" in title.value for title in app.title))
+        self.assertTrue(
+            any("Señales fundamentales" in title.value for title in app.title)
+        )
         self._assert_institutional_header_is_rendered(app, "app.py")
+
+    def test_c3_3_page(self):
+        app = self._run("pages/05_C3_3.py")
+        self.assertTrue(any("Convolución" in title.value for title in app.title))
+        self._assert_institutional_header_is_rendered(app, "pages/05_C3_3.py")
 
     def test_c1_1_page(self):
         app = self._run("pages/01_C1_1.py")
