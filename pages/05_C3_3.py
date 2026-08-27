@@ -305,11 +305,14 @@ def render_access_screen() -> None:
         "el resultado mediante DFT/FFT con dos longitudes de transformación."
     )
     render_student_guide()
-    st.page_link(
-        "pages/01_C1_1.py",
-        label="Abrir C-1-1 · Señales fundamentales",
-        icon="📈",
-    )
+    try:
+        st.page_link(
+            "pages/01_C1_1.py",
+            label="Abrir C-1-1 · Señales fundamentales",
+            icon="📈",
+        )
+    except KeyError:
+        st.caption("C-1-1 está disponible desde el menú lateral de la aplicación.")
 
     if RECOVERY_PATH_KEY in st.session_state:
         render_recovery_choice()
