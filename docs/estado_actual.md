@@ -125,13 +125,23 @@ Este documento deja por escrito qué se mantiene del planteamiento aprobado, qu�
   generados.
 - Uso de carpetas temporales para que las pruebas de interfaz no dejen sesiones
   ficticias en `session_outputs`.
+- Laboratorio piloto opcional de voz después del recorrido guiado y antes de la
+  evaluación.
+- Captura por micrófono en mono a 16 kHz, limitada a cinco segundos.
+- Convolución de la voz con `h[n] = [1, -1, 2]`, reproducción temporal y
+  comparación de forma de onda y espectro.
+- Registro exclusivo de metadatos técnicos en la sesión; el archivo de voz no
+  se guarda ni modifica la nota.
+- Aviso para estudiantes y matriz de decisión para discutir con los tutores si
+  una fase posterior debe conservar o no las grabaciones.
 
 ## Lo que falta definir
 
 - Firma digital institucional con clave privada oficial y política de custodia.
-- Parámetros técnicos de la captación por micrófono del Componente 3: duración
-  de la grabación, frecuencia de muestreo, permisos del navegador y manejo de
-  errores. El uso del micrófono ya está aprobado y no es una decisión abierta.
+- Decisión institucional sobre conservar o no los archivos de voz después del
+  piloto. La versión actual procesa el audio temporalmente y registra solamente
+  metadatos técnicos. Guardar grabaciones requeriría consentimiento específico,
+  responsables, control de acceso, tiempo de conservación y eliminación.
 - Elección institucional entre la entrega del PDF en Moodle y la consulta del
   registro original por código de sesión.
 - Mecanismo de publicación y control de acceso para el piloto con estudiantes.
