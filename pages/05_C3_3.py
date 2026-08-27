@@ -21,7 +21,7 @@ from teoria_senales.app.web_session import (
     normalize_student_code,
     restore_student_session,
 )
-from teoria_senales.domain.models import StepStatus
+from teoria_senales.domain.models import StepStatus, current_time
 from teoria_senales.evaluation.autograding import (
     QuestionType,
     evaluate_c3_3,
@@ -35,6 +35,13 @@ from teoria_senales.reports.pdf_report import (
 )
 from teoria_senales.signal_processing.convolution import parse_numeric_sequence
 from teoria_senales.signal_processing.explorer import explore_signals
+from teoria_senales.signal_processing.voice import (
+    VOICE_MAX_DURATION_SECONDS,
+    VOICE_SAMPLE_RATE,
+    VoiceAnalysis,
+    VoiceProcessingError,
+    analyze_voice,
+)
 from teoria_senales.storage.json_repository import JsonSessionRepository
 
 
@@ -48,6 +55,7 @@ RECOVERY_CODE_KEY = "c3_3_recovery_code"
 EVALUATION_STARTED_KEY = "c3_3_evaluation_started"
 EVALUATION_REVIEW_KEY = "c3_3_evaluation_review"
 EVALUATION_DRAFT_KEY = "c3_3_evaluation_draft"
+VOICE_METADATA_KEY = "voice_pilot"
 GUIDED_STEP_IDS = ("paso_1", "paso_2", "paso_3", "paso_4")
 STEP_TITLES = {
     "paso_1": "Reconocimiento de las señales",
@@ -844,6 +852,191 @@ def render_step_four(tracker) -> None:
         )
 
 
+def create_voice_comparison_figure(analysis: VoiceAnalysis) -> plt.Figure:
+    figure, axes = plt.subplots(2, 1, figsize=(7.2, 5.2))
+    original_stride = max(1, analysis.original.size // 4_000)
+    convolved_stride = max(1, analysis.convolved.size // 4_000)
+
+    original_time = np.arange(analysis.original.size) / analysis.sample_rate
+    convolved_time = np.arange(analysis.convolved.size) / analysis.sample_rate
+    axes[0].plot(
+        original_time[::original_stride],
+        analysis.original[::original_stride],
+        color="#17426f",
+        linewidth=1,
+        label="Voz original",
+    )
+    axes[0].plot(
+        convolved_time[::convolved_stride],
+        analysis.convolved[::convolved_stride],
+        color="#d97706",
+        linewidth=0.9,
+        alpha=0.75,
+        label="Voz convolucionada",
+    )
+    axes[0].set_title("Comparación temporal")
+    axes[0].set_xlabel("Tiempo (s)")
+    axes[0].set_ylabel("Amplitud")
+    axes[0].legend()
+    axes[0].grid(alpha=0.2)
+
+    original_frequency = np.fft.rfftfreq(
+        analysis.original.size,
+        d=1 / analysis.sample_rate,
+    )
+    convolved_frequency = np.fft.rfftfreq(
+        analysis.convolved.size,
+        d=1 / analysis.sample_rate,
+    )
+    original_spectrum = np.abs(np.fft.rfft(analysis.original))
+    convolved_spectrum = np.abs(np.fft.rfft(analysis.convolved))
+    if original_spectrum.max(initial=0) > 0:
+        original_spectrum = original_spectrum / original_spectrum.max()
+    if convolved_spectrum.max(initial=0) > 0:
+        convolved_spectrum = convolved_spectrum / convolved_spectrum.max()
+    axes[1].plot(
+        original_frequency,
+        original_spectrum,
+        color="#17426f",
+        linewidth=1,
+        label="Voz original",
+    )
+    axes[1].plot(
+        convolved_frequency,
+        convolved_spectrum,
+        color="#d97706",
+        linewidth=0.9,
+        label="Voz convolucionada",
+    )
+    axes[1].set_xlim(0, min(8_000, analysis.sample_rate / 2))
+    axes[1].set_title("Comparación espectral normalizada")
+    axes[1].set_xlabel("Frecuencia (Hz)")
+    axes[1].set_ylabel("Magnitud")
+    axes[1].legend()
+    axes[1].grid(alpha=0.2)
+    figure.tight_layout()
+    return figure
+
+
+def render_voice_lab(tracker) -> None:
+    st.divider()
+    st.subheader("Laboratorio piloto de voz")
+    st.write(
+        "Graba una palabra o frase corta y observa cómo la convolución también "
+        "se aplica a una señal real de voz. Este laboratorio es opcional, no "
+        "modifica la nota y complementa el ejercicio con señales sintéticas."
+    )
+    st.info(
+        "Decisión temporal del piloto: la voz se procesa únicamente durante "
+        "esta sesión y no se guarda en el archivo JSON, el reporte PDF ni otra "
+        "carpeta. Solo se registran datos técnicos no sensibles."
+    )
+    st.caption(
+        f"Duración analizada: máximo {VOICE_MAX_DURATION_SECONDS:.0f} segundos · "
+        f"captura: mono a {VOICE_SAMPLE_RATE // 1_000} kHz."
+    )
+
+    consent = st.checkbox(
+        "Entiendo que el navegador solicitará permiso para usar el micrófono "
+        "y que la grabación no será almacenada.",
+        key="c3_3_voice_consent",
+    )
+    recording = st.audio_input(
+        "Graba una palabra o frase corta",
+        sample_rate=VOICE_SAMPLE_RATE,
+        disabled=not consent,
+        key="c3_3_voice_recording",
+    )
+    if recording is None:
+        st.caption(
+            "Puedes continuar a la evaluación sin realizar este laboratorio."
+        )
+    else:
+        try:
+            analysis = analyze_voice(recording.getvalue())
+        except VoiceProcessingError as error:
+            st.error(str(error))
+        else:
+            if analysis.truncated:
+                st.warning(
+                    "La grabación superó cinco segundos. Para el análisis se "
+                    "utilizaron únicamente los primeros cinco."
+                )
+
+            original_column, convolved_column = st.columns(2)
+            with original_column:
+                st.markdown("**Voz original**")
+                st.audio(analysis.original_wav, format="audio/wav")
+            with convolved_column:
+                st.markdown("**Voz convolucionada**")
+                st.audio(analysis.convolved_wav, format="audio/wav")
+
+            figure = create_voice_comparison_figure(analysis)
+            st.pyplot(figure, width="stretch")
+            plt.close(figure)
+
+            st.markdown(
+                rf"$L_x={analysis.sample_count}$ muestras, "
+                rf"$L_h=3$ y $L_y={analysis.convolved.size}$ muestras."
+            )
+            st.write(
+                "La señal de voz actúa como x[n]. Al convolucionarla con "
+                "h[n] = [1, −1, 2], cada muestra de salida combina muestras "
+                "vecinas de la grabación y cambia su forma de onda y su espectro."
+            )
+
+            existing_metadata = tracker.session.results.get(VOICE_METADATA_KEY)
+            if existing_metadata is None:
+                tracker.session.results[VOICE_METADATA_KEY] = {
+                    "completed": True,
+                    "duration_seconds": round(analysis.duration_seconds, 3),
+                    "sample_rate_hz": analysis.sample_rate,
+                    "sample_count": analysis.sample_count,
+                    "convolved_sample_count": int(analysis.convolved.size),
+                    "truncated_to_five_seconds": analysis.truncated,
+                    "processed_at": current_time(),
+                    "raw_audio_stored": False,
+                }
+                save_active_session()
+            st.success(
+                "Laboratorio completado. Se registraron únicamente los datos "
+                "técnicos; el audio no fue guardado."
+            )
+
+    with st.expander("Decisión que debe revisarse con los tutores"):
+        st.write(
+            "Para este piloto no se almacena la voz. Esta decisión debe "
+            "presentarse a los tutores para determinar si se mantiene o si una "
+            "fase posterior necesita conservar archivos de audio."
+        )
+        st.markdown(
+            """
+            **Sin almacenar audio — configuración actual**
+
+            - reduce el tratamiento de datos personales;
+            - evita acumular archivos pesados;
+            - permite demostrar convolución, escuchar y comparar resultados;
+            - limita la revisión posterior de una grabación específica.
+
+            **Almacenando audio — decisión futura posible**
+
+            - permitiría revisar nuevamente cada evidencia;
+            - exigiría consentimiento específico, acceso restringido, tiempo de
+              conservación, mecanismo de eliminación y definición de quién
+              puede descargarla.
+
+            **Preguntas para los tutores**
+
+            1. ¿La evidencia técnica requiere escuchar nuevamente la voz?
+            2. ¿Quién tendría autorización para acceder a las grabaciones?
+            3. ¿Durante cuánto tiempo deberían conservarse?
+            4. ¿Cómo solicitaría un estudiante su eliminación?
+            5. ¿Moodle o la infraestructura institucional ofrecen el control
+               adecuado para esos archivos?
+            """
+        )
+
+
 def render_step_four_result(tracker) -> None:
     exercise = tracker.exercise
 
@@ -866,8 +1059,13 @@ def render_step_four_result(tracker) -> None:
         "con la convolución lineal."
     )
     st.write(
-        "El recorrido guiado está completo. Al iniciar la evaluación, "
-        "los resultados anteriores quedarán ocultos hasta el envío final."
+        "El recorrido guiado está completo. Antes de la evaluación puedes "
+        "probar la convolución con una señal real de voz."
+    )
+    render_voice_lab(tracker)
+    st.write(
+        "Al iniciar la evaluación, los resultados anteriores quedarán ocultos "
+        "hasta el envío final."
     )
     st.button(
         "Iniciar evaluación",
@@ -994,7 +1192,11 @@ def render_evaluation_review(
     if confirm:
         evaluation = evaluate_c3_3(draft)
         tracker.record_evaluation(evaluation)
-        tracker.complete(exercise.expected_results)
+        final_results = dict(exercise.expected_results)
+        voice_metadata = tracker.session.results.get(VOICE_METADATA_KEY)
+        if voice_metadata is not None:
+            final_results[VOICE_METADATA_KEY] = voice_metadata
+        tracker.complete(final_results)
         save_active_session()
         st.session_state[EVALUATION_REVIEW_KEY] = False
         st.session_state.pop(EVALUATION_DRAFT_KEY, None)
