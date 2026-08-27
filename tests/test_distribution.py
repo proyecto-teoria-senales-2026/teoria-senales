@@ -53,7 +53,7 @@ class DistributionTests(unittest.TestCase):
         self.assertGreater(header.stat().st_size, 10_000)
 
     def test_all_streamlit_pages_render_institutional_header(self):
-        entrypoints = [ROOT / "app.py", *sorted((ROOT / "pages").glob("*.py"))]
+        entrypoints = sorted((ROOT / "pages").glob("*.py"))
         expected_render = 'st.image(str(HEADER_IMAGE), width="stretch")'
         for entrypoint in entrypoints:
             with self.subTest(entrypoint=entrypoint.relative_to(ROOT)):
@@ -156,9 +156,9 @@ class DistributionTests(unittest.TestCase):
         self.assertEqual(missing, [])
 
     def test_visible_access_link_uses_approved_id(self):
-        app = (ROOT / "app.py").read_text(encoding="utf-8")
-        self.assertIn('label="Abrir C-1-1', app)
-        self.assertNotIn('label="Abrir C1-1', app)
+        c3_3_page = (ROOT / "pages" / "05_C3_3.py").read_text(encoding="utf-8")
+        self.assertIn('label="Abrir C-1-1', c3_3_page)
+        self.assertNotIn('label="Abrir C1-1', c3_3_page)
 
     def test_no_ai_branding_in_text_sources(self):
         # Construir los términos desde códigos evita incorporar las propias
