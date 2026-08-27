@@ -22,6 +22,8 @@ class ScormVoiceLabTests(unittest.TestCase):
         self.assertIn('id=\\"continue-evaluation\\" disabled', self.source)
         self.assertIn("if(!state.voice?.completed)", self.source)
         self.assertIn("weighting:0", self.source)
+        self.assertIn("He leído y comprendido", self.source)
+        self.assertNotIn("autorizo su procesamiento temporal", self.source)
         self.assertNotIn("Este laboratorio es opcional", self.source)
         self.assertNotIn("continúa sin grabar", self.source)
 

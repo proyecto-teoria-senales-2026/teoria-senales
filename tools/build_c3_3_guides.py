@@ -245,7 +245,7 @@ def build_student() -> Path:
 
     doc.add_heading("6. Paso 5: laboratorio obligatorio de voz", level=1)
     for text in (
-        "Lee el aviso de privacidad temporal y marca la autorización de procesamiento.",
+        "Lee el aviso de tratamiento temporal y marca que has comprendido cómo se procesará la voz.",
         "Pulsa Grabar voz, acepta el permiso del micrófono y pronuncia una palabra o frase corta.",
         "Escucha la señal original y la señal convolucionada con h[n] = [1, -1, 2].",
         "Observa la comparación de las formas de onda y relaciona el cambio con la suma de convolución.",
@@ -265,6 +265,12 @@ def build_student() -> Path:
         "En esta versión, el audio se procesa temporalmente en el navegador. No se guarda el archivo original ni el procesado en "
         "Moodle o en el estado SCORM. Solo se registran metadatos técnicos: vía utilizada, duración, frecuencia de muestreo, número "
         "de muestras, finalización y fecha/hora del procesamiento."
+    )
+    callout(
+        doc,
+        "Constancia informada:",
+        "antes de grabar o cargar el archivo, debes marcar que has leído y comprendido este tratamiento temporal. "
+        "Esta constancia no se presenta como autorización para almacenar la voz.",
     )
     doc.add_paragraph("Con el tutor deben discutir estas preguntas:")
     for text in (
@@ -361,6 +367,12 @@ def build_teacher() -> Path:
         "laboratorio. El estado SCORM conserva: fuente utilizada, duración, frecuencia de muestreo, número de muestras, indicador de "
         "truncamiento, finalización y fecha/hora."
     )
+    callout(
+        doc,
+        "Redacción aplicada en el piloto:",
+        "el estudiante marca una constancia de lectura y comprensión, no una autorización de almacenamiento. "
+        "Si la Universidad decide conservar audios, deberá definir y validar una autorización específica antes de implementar ese cambio.",
+    )
     doc.add_paragraph("Antes de aprobar almacenamiento futuro, el equipo debe resolver:")
     for text in (
         "Finalidad pedagógica concreta y proporcionalidad de conservar la voz.",
@@ -371,7 +383,6 @@ def build_teacher() -> Path:
     ):
         bullet(doc, text)
 
-    doc.add_page_break()
     doc.add_heading("8. Protocolo de prueba en Moodle", level=1)
     for text in (
         "Publicar el ZIP como actividad SCORM 1.2 en un curso de prueba con HTTPS.",
