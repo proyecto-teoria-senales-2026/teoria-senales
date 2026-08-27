@@ -5,7 +5,7 @@ Este documento deja por escrito qué se mantiene del planteamiento aprobado, qu�
 ## Lo que se mantiene
 
 1. El módulo conserva doce ejercicios, organizados en tres grupos de cuatro.
-2. La voz se incorpora dentro de los cuatro ejercicios del Componente 3. No crea ejercicios adicionales ni reemplaza el trabajo con señales sintéticas.
+2. La voz se incorpora dentro de los cuatro ejercicios del Componente 3. No crea ejercicios adicionales ni reemplaza el trabajo con señales sintéticas. El uso del micrófono ya está aprobado; la decisión pendiente es si las grabaciones deben almacenarse después del piloto.
 3. El piloto corresponde al ejercicio C-3-3 de convolución y conserva `x[n] = {1, 2, 1}`, `h[n] = {1, -1, 2}`, `N = 3` y `N = 5`.
 4. El estudiante desarrolla el procedimiento e interpreta los resultados durante
    el recorrido guiado. La herramienta se utiliza para visualizar, verificar y
