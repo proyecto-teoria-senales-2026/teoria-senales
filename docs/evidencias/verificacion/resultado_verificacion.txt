@@ -1,8 +1,0 @@
-EVIDENCIA DEL VERIFICADOR DOCENTE
-
-Original: VÁLIDO
-- Metadatos, código y contenido coinciden con la sesión original.
-
-Copia alterada: ALTERADO O NO VÁLIDO
-- La huella del contenido visible no coincide con la incorporada en el PDF.
-- El contenido visible no coincide con el reporte reconstruido desde la sesión original.
