@@ -22,6 +22,23 @@ El registro de la sesión conserva únicamente si el laboratorio se completó,
 duración, frecuencia de muestreo, número de muestras, fecha de procesamiento y
 si la grabación tuvo que limitarse a cinco segundos.
 
+## Integración en el paquete SCORM
+
+El paquete `C3-3_SCORM_1.2.zip` incluye el laboratorio después de los cuatro
+pasos guiados y antes de la evaluación. Utiliza las capacidades de audio del
+navegador y requiere que Moodle se ejecute mediante HTTPS y que el estudiante
+autorice el micrófono.
+
+El audio original y el procesado existen únicamente como objetos temporales del
+navegador. El estado SCORM guarda los metadatos técnicos y el indicador de
+realización u omisión, pero no incorpora los bytes de la grabación. La
+calificación continúa en escala de 0 a 5 y el laboratorio tiene ponderación
+cero.
+
+Si el navegador, el dispositivo o la política de Moodle bloquean el micrófono,
+el estudiante recibe un mensaje de manejo de error y puede continuar a la
+evaluación sin penalización.
+
 ## Información para estudiantes
 
 Antes de grabar, la interfaz informa que el navegador solicitará autorización
