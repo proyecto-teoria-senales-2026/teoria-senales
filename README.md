@@ -61,7 +61,12 @@ El desarrollo permite:
 - guardar la sesión en un archivo JSON;
 - generar un reporte docente corto y protegido por estudiante, ejercicio e
   intento, con un código de verificación asociado al registro original;
-- calcular una nota automática de `0,0` a `5,0`.
+- calcular una nota automática de `0,0` a `5,0`;
+- grabar hasta cinco segundos de voz como laboratorio piloto opcional;
+- convolucionar la voz con `h[n] = [1, -1, 2]` y comparar las señales original
+  y procesada de forma visual y auditiva;
+- registrar únicamente metadatos técnicos del laboratorio, sin almacenar el
+  archivo de voz ni modificar la nota.
 
 La interacción por consola se conserva como apoyo para las pruebas. La interfaz
 gráfica ya permite desarrollar los cuatro pasos numéricos, responder la
@@ -184,6 +189,7 @@ debe aparecer como `VÁLIDO` y la copia modificada como `ALTERADO O NO VÁLIDO`.
 - [Arquitectura inicial del sistema](docs/Arquitectura_Inicial_Sistema.pdf)
 - [Diagrama de arquitectura](docs/Diagrama_Arquitectura_Sistema.png)
 - [Decisiones y estado del desarrollo](docs/estado_actual.md)
+- [Piloto de voz C-3-3 y decisión para tutores](docs/PILOTO_VOZ_C-3-3.md)
 - [Reporte de demostración con datos ficticios](docs/evidencias/reporte_demostracion_C3-3.pdf)
 - [Guía del estudiante C-1-1](docs/guias/Guia_del_estudiante_C-1-1.pdf)
 - [Guía del estudiante C-1-2](docs/guias/Guia_del_estudiante_C-1-2.pdf)
@@ -205,7 +211,7 @@ visual posterior a la evaluación. Permite ingresar dos secuencias discretas,
 elegir la longitud de transformación y comparar la convolución lineal con el
 resultado obtenido mediante DFT/FFT, sin modificar la sesión ni la nota.
 
-El repositorio no contiene todavía la integración de voz ni los otros siete
+El repositorio incorpora el primer laboratorio piloto de voz en C-3-3, pero no contiene todavía los otros siete
 ejercicios. El verificador local de integridad ya funciona sin base de datos.
 Una firma digital institucional continúa pendiente porque requiere una clave
 privada oficial y una política institucional de custodia; el sistema no presenta
