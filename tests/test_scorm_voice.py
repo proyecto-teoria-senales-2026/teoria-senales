@@ -35,9 +35,18 @@ class ScormVoiceLabTests(unittest.TestCase):
     def test_voice_processing_contract(self):
         self.assertIn("VOICE_SAMPLE_RATE=16000", self.source)
         self.assertIn("VOICE_MAX_SECONDS=5", self.source)
-        self.assertIn("VOICE_FILTER=[1,-1,2]", self.source)
+        self.assertIn("function impulseResponse()", self.source)
         self.assertIn("convolveVoice", self.source)
         self.assertIn("wavBlob", self.source)
+
+    def test_three_views_and_exploration_controls_exist(self):
+        self.assertIn('id=\\"voice-waveform-original\\"', self.source)
+        self.assertIn('id=\\"voice-waveform-processed\\"', self.source)
+        self.assertIn('id=\\"voice-waveform-combined\\"', self.source)
+        self.assertIn('id=\\"voice-gain\\"', self.source)
+        self.assertIn('id=\\"voice-delay\\"', self.source)
+        self.assertIn('id=\\"voice-decay\\"', self.source)
+        self.assertIn('id=\\"voice-time\\"', self.source)
 
 
 if __name__ == "__main__":

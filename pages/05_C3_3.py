@@ -853,7 +853,7 @@ def render_step_four(tracker) -> None:
 
 
 def create_voice_comparison_figure(analysis: VoiceAnalysis) -> plt.Figure:
-    figure, axes = plt.subplots(2, 1, figsize=(7.2, 5.2))
+    figure, axes = plt.subplots(3, 1, figsize=(7.2, 7.4), sharex=True)
     original_stride = max(1, analysis.original.size // 4_000)
     convolved_stride = max(1, analysis.convolved.size // 4_000)
 
@@ -866,7 +866,7 @@ def create_voice_comparison_figure(analysis: VoiceAnalysis) -> plt.Figure:
         linewidth=1,
         label="Voz original",
     )
-    axes[0].plot(
+    axes[1].plot(
         convolved_time[::convolved_stride],
         analysis.convolved[::convolved_stride],
         color="#d97706",
@@ -874,46 +874,32 @@ def create_voice_comparison_figure(analysis: VoiceAnalysis) -> plt.Figure:
         alpha=0.75,
         label="Voz convolucionada",
     )
-    axes[0].set_title("Comparación temporal")
-    axes[0].set_xlabel("Tiempo (s)")
+    axes[0].set_title("1. Voz original")
     axes[0].set_ylabel("Amplitud")
-    axes[0].legend()
     axes[0].grid(alpha=0.2)
-
-    original_frequency = np.fft.rfftfreq(
-        analysis.original.size,
-        d=1 / analysis.sample_rate,
-    )
-    convolved_frequency = np.fft.rfftfreq(
-        analysis.convolved.size,
-        d=1 / analysis.sample_rate,
-    )
-    original_spectrum = np.abs(np.fft.rfft(analysis.original))
-    convolved_spectrum = np.abs(np.fft.rfft(analysis.convolved))
-    if original_spectrum.max(initial=0) > 0:
-        original_spectrum = original_spectrum / original_spectrum.max()
-    if convolved_spectrum.max(initial=0) > 0:
-        convolved_spectrum = convolved_spectrum / convolved_spectrum.max()
-    axes[1].plot(
-        original_frequency,
-        original_spectrum,
+    axes[1].set_title("2. Voz convolucionada")
+    axes[1].set_ylabel("Amplitud")
+    axes[1].grid(alpha=0.2)
+    axes[2].plot(
+        original_time[::original_stride],
+        analysis.original[::original_stride],
         color="#17426f",
         linewidth=1,
         label="Voz original",
     )
-    axes[1].plot(
-        convolved_frequency,
-        convolved_spectrum,
+    axes[2].plot(
+        convolved_time[::convolved_stride],
+        analysis.convolved[::convolved_stride],
         color="#d97706",
         linewidth=0.9,
+        alpha=0.75,
         label="Voz convolucionada",
     )
-    axes[1].set_xlim(0, min(8_000, analysis.sample_rate / 2))
-    axes[1].set_title("Comparación espectral normalizada")
-    axes[1].set_xlabel("Frecuencia (Hz)")
-    axes[1].set_ylabel("Magnitud")
-    axes[1].legend()
-    axes[1].grid(alpha=0.2)
+    axes[2].set_title("3. Unión de las dos señales")
+    axes[2].set_xlabel("Tiempo (s)")
+    axes[2].set_ylabel("Amplitud")
+    axes[2].legend()
+    axes[2].grid(alpha=0.2)
     figure.tight_layout()
     return figure
 
@@ -923,8 +909,8 @@ def render_voice_lab(tracker) -> None:
     st.subheader("Laboratorio piloto de voz")
     st.write(
         "Graba una palabra o frase corta y observa cómo la convolución también "
-        "se aplica a una señal real de voz. Este laboratorio es opcional, no "
-        "modifica la nota y complementa el ejercicio con señales sintéticas."
+        "se aplica a una señal real de voz. Este paso es obligatorio para "
+        "habilitar la evaluación, aunque no modifica la nota del ejercicio."
     )
     st.info(
         "Decisión temporal del piloto: la voz se procesa únicamente durante "
@@ -948,12 +934,19 @@ def render_voice_lab(tracker) -> None:
         key="c3_3_voice_recording",
     )
     if recording is None:
-        st.caption(
-            "Puedes continuar a la evaluación sin realizar este laboratorio."
-        )
+        st.warning("Graba una señal de voz para habilitar la evaluación.")
     else:
+        st.markdown("#### Controles de exploración")
+        gain = st.slider("Ganancia", 0.25, 2.0, 1.0, 0.05)
+        separation = st.slider("Separación/retardo (muestras)", 1, 40, 1)
+        decay = st.slider("Decaimiento", 0.10, 1.50, 1.0, 0.05)
         try:
-            analysis = analyze_voice(recording.getvalue())
+            analysis = analyze_voice(
+                recording.getvalue(),
+                gain=gain,
+                separation_samples=separation,
+                decay=decay,
+            )
         except VoiceProcessingError as error:
             st.error(str(error))
         else:
@@ -974,6 +967,19 @@ def render_voice_lab(tracker) -> None:
             figure = create_voice_comparison_figure(analysis)
             st.pyplot(figure, width="stretch")
             plt.close(figure)
+
+            instant = st.slider(
+                "Explorar instante (s)",
+                0.0,
+                max(analysis.duration_seconds, 0.001),
+                0.0,
+                0.001,
+            )
+            sample_index = min(int(instant * analysis.sample_rate), analysis.original.size - 1)
+            convolved_index = min(sample_index, analysis.convolved.size - 1)
+            first, second = st.columns(2)
+            first.metric("Amplitud original", f"{analysis.original[sample_index]:.4f}")
+            second.metric("Amplitud convolucionada", f"{analysis.convolved[convolved_index]:.4f}")
 
             st.markdown(
                 rf"$L_x={analysis.sample_count}$ muestras, "
@@ -996,6 +1002,9 @@ def render_voice_lab(tracker) -> None:
                     "truncated_to_five_seconds": analysis.truncated,
                     "processed_at": current_time(),
                     "raw_audio_stored": False,
+                    "gain": gain,
+                    "separation_samples": separation,
+                    "decay": decay,
                 }
                 save_active_session()
             st.success(
@@ -1059,8 +1068,8 @@ def render_step_four_result(tracker) -> None:
         "con la convolución lineal."
     )
     st.write(
-        "El recorrido guiado está completo. Antes de la evaluación puedes "
-        "probar la convolución con una señal real de voz."
+        "El recorrido guiado está completo. Para habilitar la evaluación debes "
+        "procesar una señal real de voz."
     )
     render_voice_lab(tracker)
     st.write(
@@ -1073,6 +1082,9 @@ def render_step_four_result(tracker) -> None:
         on_click=start_final_evaluation,
         type="primary",
         width="stretch",
+        disabled=not bool(
+            tracker.session.results.get(VOICE_METADATA_KEY, {}).get("completed")
+        ),
     )
 
 

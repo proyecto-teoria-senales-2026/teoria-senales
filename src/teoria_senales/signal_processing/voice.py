@@ -29,6 +29,7 @@ class VoiceAnalysis:
     convolved: NDArray[np.float64]
     original_wav: bytes
     convolved_wav: bytes
+    impulse_response: NDArray[np.float64]
 
 
 def _pcm_to_float(raw: bytes, sample_width: int) -> NDArray[np.float64]:
@@ -63,6 +64,9 @@ def analyze_voice(
     wav_data: bytes,
     *,
     max_duration_seconds: float = VOICE_MAX_DURATION_SECONDS,
+    gain: float = 1.0,
+    separation_samples: int = 1,
+    decay: float = 1.0,
 ) -> VoiceAnalysis:
     """Decodifica, limita y convoluciona una grabación WAV sin guardarla."""
 
@@ -94,7 +98,12 @@ def analyze_voice(
     samples = np.asarray(samples[:maximum_samples], dtype=np.float64)
     samples = samples - float(np.mean(samples))
 
-    convolved = np.convolve(samples, VOICE_IMPULSE_RESPONSE, mode="full")
+    separation = max(1, int(separation_samples))
+    impulse_response = np.zeros(2 * separation + 1, dtype=np.float64)
+    impulse_response[0] = float(gain)
+    impulse_response[separation] = -float(gain) * float(decay)
+    impulse_response[2 * separation] = 2.0 * float(gain) * float(decay)
+    convolved = np.convolve(samples, impulse_response, mode="full")
     duration = samples.size / sample_rate
 
     return VoiceAnalysis(
@@ -106,4 +115,5 @@ def analyze_voice(
         convolved=convolved,
         original_wav=_encode_wav(samples, sample_rate),
         convolved_wav=_encode_wav(convolved, sample_rate),
+        impulse_response=impulse_response,
     )

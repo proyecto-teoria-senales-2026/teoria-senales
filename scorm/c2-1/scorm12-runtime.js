@@ -165,9 +165,9 @@
     ].every(Boolean);
   }
 
-  function reportScore({ score, passingScore = 3, maximumScore = 5, completed = true }) {
+  function reportScore({ score, passingScore = 60, maximumScore = 100, completed = true }) {
     if (!initialized) return false;
-    const maximum = Math.max(1, Number(maximumScore) || 5);
+    const maximum = Math.max(1, Number(maximumScore) || 100);
     const raw = Math.max(0, Math.min(maximum, Math.round(score * 100) / 100));
     const status = completed ? (raw >= passingScore ? "passed" : "failed") : "incomplete";
     const results = [
