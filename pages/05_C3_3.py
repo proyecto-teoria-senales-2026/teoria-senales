@@ -313,8 +313,10 @@ def render_access_screen() -> None:
         "el resultado mediante DFT/FFT con dos longitudes de transformación."
     )
     render_student_guide()
-    st.caption(
-        "Para abrir otro ejercicio, utiliza la navegación principal de la aplicación."
+    st.link_button(
+        label="Abrir C-1-1 · Señales fundamentales",
+        url="/",
+        help="Vuelve a la navegación principal para seleccionar C-1-1.",
     )
 
     if RECOVERY_PATH_KEY in st.session_state:
