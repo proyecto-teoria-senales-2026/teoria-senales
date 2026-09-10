@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<manifest identifier="TS_C1_1_SCORM_12" version="1.0"
+<manifest identifier="TS_C1_1_V2_SCORM_12" version="2.0"
   xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
   xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.imsproject.org/xsd/imscp_rootv1p1p2 ims_xml.xsd http://www.adlnet.org/xsd/adlcp_rootv1p2 adlcp_rootv1p2.xsd">
-  <organizations default="ORG_C1_1">
-    <organization identifier="ORG_C1_1">
-      <title>Teoría de Señales — C-1-1</title>
-      <item identifier="ITEM_C1_1" identifierref="RES_C1_1">
-        <title>Representación de señales fundamentales de tiempo discreto</title>
+  <organizations default="ORG_C1_1_V2">
+    <organization identifier="ORG_C1_1_V2">
+      <title>Teoría de Señales — C-1-1 V2</title>
+      <item identifier="ITEM_C1_1_V2" identifierref="RES_C1_1_V2">
+        <title>C-1-1 V2 — Señales fundamentales de tiempo discreto</title>
       </item>
     </organization>
   </organizations>
   <resources>
-    <resource identifier="RES_C1_1" type="webcontent" adlcp:scormtype="sco" href="index.html">
+    <resource identifier="RES_C1_1_V2" type="webcontent" adlcp:scormtype="sco" href="index.html">
       <file href="index.html"/>
       <file href="styles.css"/>
       <file href="activity.js"/>

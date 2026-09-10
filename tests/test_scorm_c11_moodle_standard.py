@@ -28,6 +28,14 @@ class C11MoodleStandardTests(unittest.TestCase):
         manifest = (ROOT / "scorm" / "c1-1" / "imsmanifest.xml").read_text(encoding="utf-8")
         self.assertIn('<file href="guia_estudiante_C-1-1.pdf"/>', manifest)
 
+    def test_manifest_and_visible_title_identify_version_two(self):
+        manifest = (ROOT / "scorm" / "c1-1" / "imsmanifest.xml").read_text(encoding="utf-8")
+        index = (ROOT / "scorm" / "c1-1" / "index.html").read_text(encoding="utf-8")
+        self.assertIn('identifier="TS_C1_1_V2_SCORM_12"', manifest)
+        self.assertIn('version="2.0"', manifest)
+        self.assertIn("C-1-1 V2", manifest)
+        self.assertIn("C-1-1 V2", index)
+
     def test_student_guide_is_packaged_in_distribution_zip(self):
         package = ROOT / "scorm" / "dist" / "C1-1_SCORM_1.2.zip"
         with zipfile.ZipFile(package) as archive:
