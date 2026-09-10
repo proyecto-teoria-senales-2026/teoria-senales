@@ -1,0 +1,45 @@
+import unittest
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+ACTIVITY = ROOT / "scorm" / "c1-1" / "activity.js"
+
+
+class C11MoodleStandardTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.source = ACTIVITY.read_text(encoding="utf-8")
+
+    def test_fields_start_empty_and_use_neutral_placeholders(self):
+        self.assertIn('saved[key] ?? ""', self.source)
+        self.assertIn('"Escribe un valor"', self.source)
+        self.assertIn('"Escribe los valores separados por comas"', self.source)
+        self.assertIn('autocomplete="off"', self.source)
+
+    def test_guided_attempts_are_recorded_in_moodle(self):
+        self.assertIn("state.attempts[index] += 1", self.source)
+        self.assertIn("runtime.recordInteraction", self.source)
+        self.assertIn("runtime.recordObjective", self.source)
+        self.assertIn("C1-1-G0", self.source)
+
+    def test_finish_saves_commits_and_finishes_in_order(self):
+        handler = self.source.split('document.querySelector("#finish").addEventListener("click", () => {', 1)[1]
+        handler = handler.split("setTimeout", 1)[0]
+        self.assertLess(handler.index("save();"), handler.index("runtime.commit();"))
+        self.assertLess(handler.index("runtime.commit();"), handler.index("runtime.finish();"))
+
+    def test_finish_returns_to_moodle_without_window_close(self):
+        self.assertIn("window.top.location.assign(target)", self.source)
+        self.assertIn("window.top.history.back()", self.source)
+        self.assertIn("/mod/scorm/view.php", self.source)
+        self.assertIn("/course/view.php", self.source)
+        self.assertNotIn("window.close()", self.source)
+
+    def test_score_scale_remains_zero_to_one_hundred(self):
+        self.assertIn("const PASSING_SCORE = 60", self.source)
+        self.assertIn("/ 100", self.source)
+
+
+if __name__ == "__main__":
+    unittest.main()
