@@ -15,6 +15,7 @@
       fields: [["impulse", "δ[0]"], ["step", "u[-1]"], ["ramp", "r[3]"]],
       expected: { impulse: 1, step: 0, ramp: 3 },
       hint: "Ubica primero n = 0. El impulso solo vale 1 allí; el escalón es cero para n < 0 y la rampa r[n] vale n para n ≥ 0.",
+      criterion: "C1_1_CR1",
     },
     {
       title: "Calcula el efecto de la amplitud",
@@ -23,6 +24,7 @@
       fields: [["impulse", "3δ[0]"], ["step", "2u[4]"], ["ramp", "r[3]"]],
       expected: { impulse: 3, step: 2, ramp: 3 },
       hint: "Primero calcula el valor de la señal básica y luego aplica el factor de amplitud.",
+      criterion: "C1_1_CR2",
     },
     {
       title: "Interpreta la señal exponencial",
@@ -32,6 +34,7 @@
       expected: { x0: 1, x2: 0.25, behavior: "decrease" },
       options: [["decrease", "Disminuye hacia cero"], ["constant", "Permanece constante"], ["growth", "Crece sin límite"]],
       hint: "Evalúa la potencia para n = 0 y n = 2. La base 1/2 está entre cero y uno.",
+      criterion: "C1_1_CR2",
     },
     {
       title: "Halla el periodo y las muestras senoidales",
@@ -40,6 +43,7 @@
       fields: [["period", "Periodo N₀"], ["samples", "x[0], x[1], x[2], x[3], x[4]"]],
       expected: { period: 4, samples: [0, 1, 0, -1, 0] },
       hint: "Busca el menor entero positivo N₀ que cumpla (π/2)N₀ = 2π. Separa las cinco muestras con comas.",
+      criterion: "C1_1_CR3",
     },
   ];
 
@@ -90,7 +94,7 @@
 
   function createState() {
     const identity = runtime.studentId() || runtime.studentName() || "sesion-local";
-    return { version: 1, seed: `${identity}-c1-1`, startedAt: new Date().toISOString(), completedAt: null, stage: 0, answers: {}, attempts: [0, 0, 0, 0], helpUsed: [false, false, false, false], evaluated: false, score: null, feedback: null };
+    return { version: 2, seed: `${identity}-c1-1`, startedAt: new Date().toISOString(), completedAt: null, stage: 0, answers: {}, attempts: [0, 0, 0, 0], guidedPoints: [0, 0, 0, 0], helpUsed: [false, false, false, false], evaluated: false, points: 0, score: null, feedback: null };
   }
 
   let state;
@@ -109,16 +113,16 @@
   }
 
   function renderIntro() {
-    content.innerHTML = `<section class="card stack"><h2>Actividad guiada</h2><p>Reconoce y representa impulso, escalón, rampa, exponencial y senoidal mediante cuatro pasos guiados y una evaluación final.</p><div class="notice"><strong>Tu avance se guarda en Moodle.</strong> Puedes salir y continuar el mismo intento más tarde.</div><p class="small">La evaluación final selecciona cinco preguntas del banco: tres de selección múltiple y dos de verdadero/falso.</p><div class="actions"><button id="start">Iniciar ejercicio C-1-1</button></div></section>`;
+    content.innerHTML = `<section class="card stack"><h2>Actividad guiada</h2><p>Reconoce y representa impulso, escalón, rampa, exponencial y senoidal mediante cuatro pasos guiados y una evaluación final.</p><div class="notice"><strong>Tu avance se guarda en Moodle.</strong> Puedes salir y continuar el mismo intento más tarde.</div><p><strong>Puntaje de los pasos guiados:</strong> cada paso vale 3 puntos si se responde correctamente en el primer intento y 2 puntos si se corrige después.</p><p class="small">La evaluación final selecciona cinco preguntas del banco: tres de selección múltiple y dos de verdadero/falso.</p><div class="actions"><button id="start">Iniciar ejercicio C-1-1</button></div></section>`;
     document.querySelector("#start").addEventListener("click", () => { state.stage = 1; state.feedback = null; save(); render(); });
   }
 
   function renderGuidedStep(index) {
     const step = guidedSteps[index];
     const saved = state.answers[index] || {};
-    const fields = step.fields.map(([key, label]) => `<label>${label}<input data-field="${key}" value="${saved[key] ?? ""}" inputmode="decimal"></label>`).join("");
+    const fields = step.fields.map(([key, label]) => `<label>${label}<input data-field="${key}" value="${saved[key] ?? ""}" placeholder="${key === "samples" ? "Escribe los valores separados por comas" : "Escribe un valor"}" inputmode="decimal" autocomplete="off"></label>`).join("");
     const options = step.options ? `<fieldset><legend>Cuando n aumenta, la señal:</legend><div class="options">${step.options.map(([key, label]) => `<label class="option"><input type="radio" name="behavior" value="${key}" ${saved.behavior === key ? "checked" : ""}>${label}</label>`).join("")}</div></fieldset>` : "";
-    content.innerHTML = `<section class="card stack">${heading(index + 1)}<h2>${step.title}</h2><p>${step.prompt}</p><p class="formula">${step.formula}</p><form id="guided-form"><div class="input-grid">${fields}</div>${options}<div class="actions"><button type="submit">Verificar respuesta</button><button class="secondary" type="button" id="help" ${state.helpUsed[index] ? "disabled" : ""}>Ver orientación</button></div></form>${feedback(state.feedback, state.feedbackKind || "info")}</section>`;
+    content.innerHTML = `<section class="card stack">${heading(index + 1)}<h2>${step.title}</h2><p>${step.prompt}</p><p class="small">Puntaje: 3 puntos al acertar en el primer intento; 2 puntos al corregir después.</p><p class="formula">${step.formula}</p><form id="guided-form"><div class="input-grid">${fields}</div>${options}<div class="actions"><button type="submit">Verificar respuesta</button><button class="secondary" type="button" id="help" ${state.helpUsed[index] ? "disabled" : ""}>Ver orientación</button></div></form>${feedback(state.feedback, state.feedbackKind || "info")}</section>`;
     document.querySelector("#guided-form").addEventListener("submit", (event) => { event.preventDefault(); validateGuidedStep(index); });
     document.querySelector("#help").addEventListener("click", () => { state.helpUsed[index] = true; state.feedback = step.hint; state.feedbackKind = "info"; save(); render(); });
   }
@@ -136,19 +140,31 @@
     } else {
       correct = Object.entries(step.expected).every(([key, expected]) => key === "behavior" ? answer[key] === expected : numericEqual(Number(answer[key]), expected));
     }
-    if (correct) { state.stage += 1; state.feedback = null; state.feedbackKind = null; }
-    else { state.attempts[index] += 1; state.feedback = `El resultado todavía no coincide. Intento ${state.attempts[index]} registrado. Revisa el procedimiento y vuelve a intentarlo.`; state.feedbackKind = "error"; }
+    state.attempts[index] += 1;
+    const interactionResponse = step.fields.map(([key]) => answer[key]).join(" | ");
+    runtime.recordInteraction({ id: `C1-1-G0${index + 1}-${state.attempts[index]}`, type: "fill-in", response: interactionResponse, correct, weighting: 3 });
+    if (correct) {
+      state.guidedPoints[index] = state.attempts[index] === 1 ? 3 : 2;
+      runtime.recordObjective({ id: step.criterion, score: (state.guidedPoints[index] / 3) * 100, passingScore: OBJECTIVE_PASSING_SCORE });
+      state.stage += 1;
+      state.feedback = null;
+      state.feedbackKind = null;
+    } else {
+      runtime.recordObjective({ id: step.criterion, score: 0, passingScore: OBJECTIVE_PASSING_SCORE });
+      state.feedback = `El resultado todavía no coincide. Intento ${state.attempts[index]} registrado. Revisa el procedimiento y vuelve a intentarlo.`;
+      state.feedbackKind = "error";
+    }
     save(); runtime.setProgress(progress()); render();
   }
 
   function renderEvaluation() {
     const questions = selectQuestions(state.seed);
-    content.innerHTML = `<section class="card stack">${heading(5)}<h2>Evaluación final</h2><p>Responde las cinco preguntas asignadas. La calificación final se registra en Moodle en la escala de 0 a 100.</p><form id="evaluation-form" class="stack">${questions.map(([id, type, prompt, expected, options]) => `<fieldset><legend>${id} · ${prompt}</legend><div class="options">${type === "mc" ? options.map(([key, label]) => `<label class="option"><input type="radio" name="${id}" value="${key}">${key.toUpperCase()}. ${label}</label>`).join("") : `<label class="option"><input type="radio" name="${id}" value="true">Verdadero</label><label class="option"><input type="radio" name="${id}" value="false">Falso</label>`}</div></fieldset>`).join("")}<div class="actions"><button type="submit">Calificar y finalizar</button></div></form>${feedback(state.feedback, state.feedbackKind || "info")}</section>`;
+    content.innerHTML = `<section class="card stack">${heading(5)}<h2>Evaluación final</h2><p>Responde las cinco preguntas asignadas. La calificación final se registra en Moodle en la escala de 0 a 100.</p><p class="small"><strong>Distribución:</strong> pasos guiados: hasta 12 puntos; selección múltiple: 6 puntos; verdadero/falso: 2 puntos.</p><form id="evaluation-form" class="stack">${questions.map(([id, type, prompt, expected, options]) => `<fieldset><legend>${id} · ${prompt}</legend><div class="options">${type === "mc" ? options.map(([key, label]) => `<label class="option"><input type="radio" name="${id}" value="${key}">${key.toUpperCase()}. ${label}</label>`).join("") : `<label class="option"><input type="radio" name="${id}" value="true">Verdadero</label><label class="option"><input type="radio" name="${id}" value="false">Falso</label>`}</div></fieldset>`).join("")}<div class="actions"><button type="submit">Calificar y finalizar</button></div></form>${feedback(state.feedback, state.feedbackKind || "info")}</section>`;
     document.querySelector("#evaluation-form").addEventListener("submit", (event) => { event.preventDefault(); gradeEvaluation(questions); });
   }
 
   function gradeEvaluation(questions) {
-    let correctCount = 0;
+    let conceptualPoints = 0;
     const unanswered = [];
     const submitted = questions.map(([id, type, prompt, expected]) => {
       const response = document.querySelector(`input[name="${id}"]:checked`)?.value;
@@ -165,15 +181,17 @@
     submitted.forEach(({ id, type, expected, response }) => {
       const normalized = type === "tf" ? response === "true" : response;
       const correct = normalized === expected;
-      runtime.recordInteraction({ id, type: type === "tf" ? "true-false" : "choice", response: normalized, correct, weighting: 1 });
+      const weighting = type === "tf" ? 1 : 2;
+      runtime.recordInteraction({ id, type: type === "tf" ? "true-false" : "choice", response: normalized, correct, weighting });
       const criterion = criterionForQuestion(id);
       criterionResults[criterion] ||= { correct: 0, total: 0 };
       criterionResults[criterion].total += 1;
       if (correct) criterionResults[criterion].correct += 1;
-      if (correct) correctCount += 1;
+      if (correct) conceptualPoints += weighting;
     });
     state.evaluated = true;
-    state.score = correctCount * 20;
+    state.points = state.guidedPoints.reduce((total, value) => total + value, 0) + conceptualPoints;
+    state.score = Math.round((state.points / 20) * 100);
     state.completedAt = new Date().toISOString();
     state.feedback = null;
     runtime.setProgress(100);
@@ -187,8 +205,63 @@
 
   function renderResult() {
     const status = state.score >= PASSING_SCORE ? "Actividad aprobada" : "Actividad finalizada";
-    content.innerHTML = `<section class="card stack"><p class="eyebrow">Resultado registrado</p><h2>${status}</h2><p class="score">${state.score.toFixed(2).replace(".", ",")} / 100</p><p>Finalización registrada: <strong>${formatDateTime(state.completedAt || new Date().toISOString())}</strong>.</p><p>La actividad envió a Moodle la nota, el estado de finalización, el avance, las interacciones y los resultados por criterio.</p><div class="notice">El docente consulta el resultado y la fecha/hora oficial del intento directamente desde Moodle. No necesitas descargar ni entregar un archivo adicional.</div><div class="actions"><button id="finish">Finalizar y salir</button></div></section>`;
-    document.querySelector("#finish").addEventListener("click", () => { runtime.finish(); content.querySelector("#finish").textContent = "Actividad finalizada"; content.querySelector("#finish").disabled = true; });
+    content.innerHTML = `<section class="card stack"><p class="eyebrow">Resultado registrado</p><h2>${status}</h2><p class="score">${state.score.toFixed(2).replace(".", ",")} / 100</p><p>${state.points} / 20 puntos</p><p>Finalización registrada: <strong>${formatDateTime(state.completedAt || new Date().toISOString())}</strong>.</p><p>La actividad envió a Moodle la nota, el estado de finalización, el avance, las interacciones y los resultados por criterio.</p><div class="notice">El docente consulta el resultado y la fecha/hora oficial del intento directamente desde Moodle. No necesitas descargar ni entregar un archivo adicional.</div><div class="actions"><button id="finish">Finalizar y salir</button></div><p id="finish-status" class="small" aria-live="polite"></p></section>`;
+    document.querySelector("#finish").addEventListener("click", () => {
+      const button = document.querySelector("#finish");
+      const finishStatus = document.querySelector("#finish-status");
+      button.disabled = true;
+      button.textContent = "Guardando y saliendo…";
+      save();
+      runtime.commit();
+      const finished = runtime.finish();
+      finishStatus.textContent = finished ? "Sesión finalizada. Regresando a Moodle…" : "Moodle no confirmó el cierre, pero el estado ya fue guardado. Regresando…";
+      setTimeout(() => {
+        if (!leaveScormPlayer()) {
+          button.textContent = "Sesión finalizada";
+          finishStatus.textContent = "La sesión quedó guardada. Usa el control de salida del reproductor de Moodle para volver al curso.";
+        }
+      }, 150);
+    });
+  }
+
+  function moodleReturnUrl() {
+    const candidates = [];
+    let frame = window;
+    for (let depth = 0; depth < 10; depth += 1) {
+      try {
+        candidates.push(frame.document.referrer, frame.location.href);
+        if (frame === frame.parent) break;
+        frame = frame.parent;
+      } catch (_) {
+        break;
+      }
+    }
+    for (const value of candidates) {
+      if (!value) continue;
+      try {
+        const url = new URL(value, window.location.href);
+        if (url.origin !== window.location.origin) continue;
+        if (url.pathname.includes("/mod/scorm/view.php") || url.pathname.includes("/course/view.php")) return url.href;
+        if (url.pathname.includes("/mod/scorm/player.php")) {
+          const courseModule = url.searchParams.get("cm") || url.searchParams.get("cmid");
+          if (courseModule) return new URL(`/mod/scorm/view.php?id=${encodeURIComponent(courseModule)}`, url.origin).href;
+        }
+      } catch (_) {
+        continue;
+      }
+    }
+    return "";
+  }
+
+  function leaveScormPlayer() {
+    const target = moodleReturnUrl();
+    try {
+      if (target) { window.top.location.assign(target); return true; }
+      if (window.top.history.length > 1) { window.top.history.back(); return true; }
+    } catch (_) {
+      if (window.history.length > 1) { window.history.back(); return true; }
+    }
+    return false;
   }
 
   function render() {
@@ -201,6 +274,12 @@
 
   runtime.initialize();
   state = runtime.restoreState() || createState();
+  if (!Array.isArray(state.guidedPoints)) {
+    state.guidedPoints = [0, 0, 0, 0];
+    for (let index = 0; index < 4; index += 1) {
+      if (state.stage > index + 1 && state.attempts?.[index] > 0) state.guidedPoints[index] = state.attempts[index] === 1 ? 3 : 2;
+    }
+  }
+  if (!Number.isFinite(state.points)) state.points = 0;
   render();
 })();
-
