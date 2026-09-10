@@ -1,4 +1,5 @@
 import unittest
+import zipfile
 from pathlib import Path
 
 
@@ -16,6 +17,22 @@ class C11MoodleStandardTests(unittest.TestCase):
         self.assertIn('"Escribe un valor"', self.source)
         self.assertIn('"Escribe los valores separados por comas"', self.source)
         self.assertIn('autocomplete="off"', self.source)
+
+    def test_student_guide_is_available_before_and_during_activity(self):
+        self.assertIn("Guía del estudiante C‑1‑1", self.source)
+        self.assertIn('href="guia_estudiante_C-1-1.pdf"', self.source)
+        heading = self.source.split("function heading", 1)[1].split("function feedback", 1)[0]
+        self.assertIn("Ver guía del estudiante", heading)
+
+    def test_student_guide_is_declared_in_manifest(self):
+        manifest = (ROOT / "scorm" / "c1-1" / "imsmanifest.xml").read_text(encoding="utf-8")
+        self.assertIn('<file href="guia_estudiante_C-1-1.pdf"/>', manifest)
+
+    def test_student_guide_is_packaged_in_distribution_zip(self):
+        package = ROOT / "scorm" / "dist" / "C1-1_SCORM_1.2.zip"
+        with zipfile.ZipFile(package) as archive:
+            self.assertIn("guia_estudiante_C-1-1.pdf", archive.namelist())
+            self.assertGreater(archive.getinfo("guia_estudiante_C-1-1.pdf").file_size, 0)
 
     def test_guided_attempts_are_recorded_in_moodle(self):
         self.assertIn("state.attempts[index] += 1", self.source)

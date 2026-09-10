@@ -100,7 +100,7 @@
   let state;
   function save() { runtime.saveState(state); }
   function progress() { return state.evaluated ? 100 : Math.round((state.stage / 5) * 100); }
-  function heading(current) { return `<div class="progress"><span>Paso ${current} de 5</span><span>${progress()} % completado</span></div><div class="progress-bar"><span style="width:${progress()}%"></span></div>`; }
+  function heading(current) { return `<div class="progress"><span>Paso ${current} de 5</span><a class="guide-link" href="guia_estudiante_C-1-1.pdf" target="_blank" rel="noopener">Ver guía del estudiante</a><span>${progress()} % completado</span></div><div class="progress-bar"><span style="width:${progress()}%"></span></div>`; }
   function feedback(message, kind) { return message ? `<p class="feedback ${kind}">${message}</p>` : ""; }
   function numericEqual(actual, expected) { return Number.isFinite(actual) && Math.abs(actual - expected) <= 0.000001; }
   function parseSequence(value) { const values = String(value || "").trim().split(/[;,\s]+/).filter(Boolean).map(Number); return values.length === 5 && values.every(Number.isFinite) ? values : null; }
@@ -113,7 +113,7 @@
   }
 
   function renderIntro() {
-    content.innerHTML = `<section class="card stack"><h2>Actividad guiada</h2><p>Reconoce y representa impulso, escalón, rampa, exponencial y senoidal mediante cuatro pasos guiados y una evaluación final.</p><div class="notice"><strong>Tu avance se guarda en Moodle.</strong> Puedes salir y continuar el mismo intento más tarde.</div><p><strong>Puntaje de los pasos guiados:</strong> cada paso vale 3 puntos si se responde correctamente en el primer intento y 2 puntos si se corrige después.</p><p class="small">La evaluación final selecciona cinco preguntas del banco: tres de selección múltiple y dos de verdadero/falso.</p><div class="actions"><button id="start">Iniciar ejercicio C-1-1</button></div></section>`;
+    content.innerHTML = `<section class="card stack"><h2>Actividad guiada</h2><p>Reconoce y representa impulso, escalón, rampa, exponencial y senoidal mediante cuatro pasos guiados y una evaluación final.</p><div class="notice"><strong>Tu avance se guarda en Moodle.</strong> Puedes salir y continuar el mismo intento más tarde.</div><div class="guide-access"><h3>Guía del estudiante C‑1‑1</h3><p>Consulta la guía antes de comenzar. Permanecerá disponible durante todo el recorrido.</p><a class="button-link secondary" href="guia_estudiante_C-1-1.pdf" target="_blank" rel="noopener">Ver guía del estudiante</a></div><p><strong>Puntaje de los pasos guiados:</strong> cada paso vale 3 puntos si se responde correctamente en el primer intento y 2 puntos si se corrige después.</p><p class="small">La evaluación final selecciona cinco preguntas del banco: tres de selección múltiple y dos de verdadero/falso.</p><div class="actions"><button id="start">Iniciar ejercicio C-1-1</button></div></section>`;
     document.querySelector("#start").addEventListener("click", () => { state.stage = 1; state.feedback = null; save(); render(); });
   }
 
