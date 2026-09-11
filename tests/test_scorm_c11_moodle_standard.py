@@ -21,6 +21,7 @@ class C11MoodleStandardTests(unittest.TestCase):
     def test_student_guide_is_available_before_and_during_activity(self):
         self.assertIn("Guía del estudiante C‑1‑1", self.source)
         self.assertIn('href="guia_estudiante_C-1-1.pdf"', self.source)
+        self.assertIn("utiliza punto (.) como separador decimal", self.source)
         heading = self.source.split("function heading", 1)[1].split("function feedback", 1)[0]
         self.assertIn("Ver guía del estudiante", heading)
 
@@ -28,16 +29,18 @@ class C11MoodleStandardTests(unittest.TestCase):
         manifest = (ROOT / "scorm" / "c1-1" / "imsmanifest.xml").read_text(encoding="utf-8")
         self.assertIn('<file href="guia_estudiante_C-1-1.pdf"/>', manifest)
 
-    def test_manifest_and_visible_title_identify_version_two(self):
+    def test_manifest_and_visible_title_identify_version_four(self):
         manifest = (ROOT / "scorm" / "c1-1" / "imsmanifest.xml").read_text(encoding="utf-8")
         index = (ROOT / "scorm" / "c1-1" / "index.html").read_text(encoding="utf-8")
-        self.assertIn('identifier="TS_C1_1_V2_SCORM_12"', manifest)
-        self.assertIn('version="2.0"', manifest)
-        self.assertIn("C-1-1 V2", manifest)
-        self.assertIn("C-1-1 V2", index)
+        self.assertIn('identifier="TS_C1_1_V4_SCORM_12"', manifest)
+        self.assertIn('version="4.0"', manifest)
+        self.assertIn("<title>Teoría de Señales — C-1-1</title>", manifest)
+        self.assertIn("<title>C-1-1 — Señales fundamentales de tiempo discreto</title>", manifest)
+        self.assertIn("Componente 1 · Ejercicio C-1-1</p>", index)
+        self.assertNotIn("Ejercicio C-1-1 V4", index)
 
     def test_student_guide_is_packaged_in_distribution_zip(self):
-        package = ROOT / "scorm" / "dist" / "C1-1_SCORM_1.2.zip"
+        package = ROOT / "scorm" / "dist" / "C-1-1_SCORM_1.2_V4_QA_AJUSTADO.zip"
         with zipfile.ZipFile(package) as archive:
             self.assertIn("guia_estudiante_C-1-1.pdf", archive.namelist())
             self.assertGreater(archive.getinfo("guia_estudiante_C-1-1.pdf").file_size, 0)

@@ -4,3 +4,5 @@
 .voice-plots section{border:1px solid var(--line);border-radius:8px;padding:14px}
 .voice-plots h3{margin:0 0 10px;color:var(--blue)}
 @media(max-width:700px){.voice-controls{grid-template-columns:1fr}}
+.guide-access{padding:16px;border:1px solid var(--line);border-radius:8px;background:#f7f9fb}.guide-access h3{margin:0 0 6px;color:var(--blue)}.guide-access p{margin:0 0 14px}.button-link{display:inline-block;border-radius:6px;background:var(--blue);color:#fff;padding:12px 18px;font-weight:700;text-decoration:none}.button-link.secondary{background:#eaf0f5;color:var(--blue)}.button-link:focus,.button-link:hover{outline:2px solid var(--yellow);outline-offset:2px}
+.guide-link{color:var(--blue);font-weight:700;text-decoration:underline;text-underline-offset:3px}.guide-link:focus,.guide-link:hover{outline:2px solid var(--yellow);outline-offset:3px}@media(max-width:700px){.progress{align-items:flex-start;flex-direction:column}.guide-link{order:3}}
