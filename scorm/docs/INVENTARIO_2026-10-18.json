@@ -1,7 +1,7 @@
 {
   "date": "2026-10-18",
   "moodle_approved_count": 12,
-  "recovered_archive_count": 11,
+  "recovered_archive_count": 12,
   "packages": [
     {
       "code": "C-1-1",
@@ -52,6 +52,14 @@
       "bytes": 94311
     },
     {
+      "code": "C-2-3",
+      "archive": "C-2-3_SCORM_1.2_V2_QA.zip",
+      "sha256": "7e7f7747f2907608fb218f1a912bc6ee77063e41c82a3fffdc8b4d8623a37247",
+      "source": "scorm/c2-3",
+      "qa": "Aprobado y cargado en Moodle; archivo aprobado adjuntado por el equipo el 18 de octubre de 2026",
+      "bytes": 88937
+    },
+    {
       "code": "C-2-4",
       "archive": "C-2-4_SCORM_1.2_V7_QA.zip",
       "sha256": "47fe6af38c93fd3e131be24a016f46631103fdf35eba7df5413f017d8a2239cd",
@@ -91,9 +99,5 @@
       "qa": "Aprobado y cargado en Moodle, confirmado por el equipo",
       "bytes": 151210
     }
-  ],
-  "c2_3": {
-    "moodle": "Aprobado y cargado, confirmado por el equipo",
-    "github": "Se conserva el corte histórico; archivo del corte aprobado no recuperado"
-  }
+  ]
 }

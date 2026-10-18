@@ -1,12 +1,12 @@
 # Estado de entrega SCORM al 18 de octubre de 2026
 
-Los doce ejercicios están aprobados, cargados en Moodle y con QA completado, según la confirmación del equipo del proyecto. Esta rama consolida once ZIP recuperados, con fuentes extraídas sin cambios, guías incluidas y huellas SHA-256.
+Los doce ejercicios están aprobados, cargados en Moodle y con QA completado, según la confirmación del equipo del proyecto. Esta rama consolida doce ZIP recuperados, con fuentes extraídas sin cambios, guías incluidas y huellas SHA-256.
 
 - [Inventario y registro de consolidación](scorm/docs/CONSOLIDACION_2026-10-18.md).
 - [Inventario verificable en JSON](scorm/docs/INVENTARIO_2026-10-18.json).
 - [Paquetes de distribución](scorm/dist/).
 
-C-2-3 conserva aquí su corte histórico: el archivo del último corte aprobado en Moodle no se recuperó para esta actualización. Su aprobación funcional se conserva; no se afirma equivalencia entre ese archivo histórico y el corte de Moodle.
+C-2-3 V2 quedó incorporado con el ZIP aprobado adjuntado por el equipo el 18 de octubre. Los doce ejercicios cuentan con respaldo de paquetes y fuentes en esta rama.
 
 Las carpetas `scorm/c1-1/` a `scorm/c3-4/` contienen las fuentes; el `imsmanifest.xml` de cada paquete identifica el HTML de lanzamiento vigente. El contenido siguiente describe el prototipo histórico Python/Streamlit y no sustituye el inventario SCORM de cierre.
 
@@ -232,3 +232,4 @@ privada oficial y una política institucional de custodia; el sistema no present
 la huella SHA-256 como si fuera una firma certificada.
 
 El código y la documentación se mantienen en un repositorio privado mientras se definen las condiciones institucionales de uso y distribución.
+

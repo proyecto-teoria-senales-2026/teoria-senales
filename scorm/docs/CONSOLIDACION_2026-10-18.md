@@ -2,11 +2,11 @@
 
 Los doce ejercicios están aprobados, cargados en el módulo de Moodle y con QA completado, según la confirmación del equipo del proyecto del 18 de octubre de 2026.
 
-Esta actualización incorpora **once archivos ZIP recuperados**, sus fuentes extraídas sin cambios y los nombres canónicos de distribución. C-1-1 V4 y C-2-1 V2 ya estaban en la rama; se conservan sus bytes. Las demás versiones recuperadas actualizan los cortes anteriores. Los nombres canónicos `C1-1_SCORM_1.2.zip`, etc. apuntan a los mismos bytes que el ZIP versionado indicado en el inventario.
+Esta actualización incorpora **doce archivos ZIP recuperados**, sus fuentes extraídas sin cambios y los nombres canónicos de distribución. C-1-1 V4 y C-2-1 V2 ya estaban en la rama; se conservan sus bytes. Las demás versiones recuperadas actualizan los cortes anteriores. Los nombres canónicos `C1-1_SCORM_1.2.zip`, etc. apuntan a los mismos bytes que el ZIP versionado indicado en el inventario.
 
-## Diferencia de trazabilidad para C-2-3
+## Incorporación de C-2-3 V2
 
-C-2-3 está aprobado y en Moodle. No se recuperó el ZIP de ese último corte durante esta consolidación. Se conserva el código y el ZIP histórico ya existentes en GitHub, sin renombrarlos como una nueva versión ni afirmar equivalencia con la entrega aprobada en Moodle. La publicación del archivo exacto de ese corte queda pendiente de recuperación; esto no cambia su aprobación funcional.
+El equipo adjuntó `C-2-3_SCORM_1.2_V2_QA.zip` como archivo aprobado el 18 de octubre de 2026. Se verificaron integridad ZIP, referencias del manifiesto y sintaxis JavaScript. Se incorporan sus seis archivos fuente y el ZIP original, sin modificar su contenido. Con esta incorporación queda completo el respaldo de los doce ejercicios.
 
 ## Inventario de los archivos recuperados
 
@@ -18,6 +18,7 @@ C-2-3 está aprobado y en Moodle. No se recuperó el ZIP de ese último corte du
 | C-1-4 | `C-1-4_SCORM_1.2_V6.zip` | `f85cb2d1ab0c9fa963672f66a11cc28b548e80eda0d4145736f92d7902107057` |
 | C-2-1 | `C-2-1_SCORM_1.2_V2_QA.zip` | `24f18feabfa22b3addbf3ce499c03b2fb696177cc490b50d7b574f6534812acd` |
 | C-2-2 | `C-2-2_SCORM_1.2_V4_QA.zip` | `803c219c76ee90f834d15fb925b245b88e723d57ec3a1a71b3ce0d28e3d8b932` |
+| C-2-3 | `C-2-3_SCORM_1.2_V2_QA.zip` | `7e7f7747f2907608fb218f1a912bc6ee77063e41c82a3fffdc8b4d8623a37247` |
 | C-2-4 | `C-2-4_SCORM_1.2_V7_QA.zip` | `47fe6af38c93fd3e131be24a016f46631103fdf35eba7df5413f017d8a2239cd` |
 | C-3-1 | `C-3-1_SCORM_1.2_V12_QA.zip` | `a2f4fe544fb42d1148759674216f814c9fabc039d2f19a30566657bde30e979a` |
 | C-3-2 | `C-3-2_SCORM_1.2_V5_QA.zip` | `313755111ea28aeb4212c12249f78a115b853343d532656a8a77a2827b5259a6` |
@@ -26,7 +27,7 @@ C-2-3 está aprobado y en Moodle. No se recuperó el ZIP de ese último corte du
 
 ## Verificación de esta consolidación
 
-Se comprobó la integridad ZIP, la presencia de las referencias del manifiesto y la sintaxis de los archivos JavaScript de los once paquetes. No se modificó su lógica ni se repitió la aplicación con estudiantes. Estas comprobaciones de distribución no sustituyen el QA ya completado en Moodle.
+Se comprobó la integridad ZIP, la presencia de las referencias del manifiesto y la sintaxis de los archivos JavaScript de los doce paquetes. No se modificó su lógica ni se repitió la aplicación con estudiantes. Estas comprobaciones de distribución no sustituyen el QA ya completado en Moodle.
 
 - C-1-3: ZIP íntegro; referencias de manifiesto presentes; sintaxis JavaScript correcta.
 - C-1-1: ZIP íntegro; referencias de manifiesto presentes; sintaxis JavaScript correcta.
@@ -40,6 +41,8 @@ Se comprobó la integridad ZIP, la presencia de las referencias del manifiesto y
 - C-3-2: ZIP íntegro; referencias de manifiesto presentes; sintaxis JavaScript correcta.
 - C-3-4: ZIP íntegro; referencias de manifiesto presentes; sintaxis JavaScript correcta.
 
+- C-2-3: ZIP íntegro; referencias de manifiesto presentes; sintaxis JavaScript correcta.
+
 ## Evaluación y audio
 
 El estándar de cierre usa veinte puntos internos, conversión a 0–100 y aprobación desde 60. No se aplicó una conversión adicional al libro de calificaciones. El laboratorio de voz no modifica la nota y el audio se procesa temporalmente en el navegador. Los bancos varían por archivo: no se declara que todos tengan quince preguntas. En C-1-4 V6 se conservan los once ítems presentes en el ZIP inspeccionado.
@@ -47,3 +50,4 @@ El estándar de cierre usa veinte puntos internos, conversión a 0–100 y aprob
 ## Uso académico
 
 La monografía describe la arquitectura y la implementación de los doce ejercicios en el capítulo 3. El capítulo 4 separa los resultados del QA del piloto pedagógico de C-1-1. Este registro y el inventario permiten vincular los archivos de entrega con el código sin publicar datos de estudiantes.
+
