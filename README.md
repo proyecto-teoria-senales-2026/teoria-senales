@@ -1,3 +1,17 @@
+# Estado de entrega SCORM al 18 de octubre de 2026
+
+Los doce ejercicios están aprobados, cargados en Moodle y con QA completado, según la confirmación del equipo del proyecto. Esta rama consolida once ZIP recuperados, con fuentes extraídas sin cambios, guías incluidas y huellas SHA-256.
+
+- [Inventario y registro de consolidación](scorm/docs/CONSOLIDACION_2026-10-18.md).
+- [Inventario verificable en JSON](scorm/docs/INVENTARIO_2026-10-18.json).
+- [Paquetes de distribución](scorm/dist/).
+
+C-2-3 conserva aquí su corte histórico: el archivo del último corte aprobado en Moodle no se recuperó para esta actualización. Su aprobación funcional se conserva; no se afirma equivalencia entre ese archivo histórico y el corte de Moodle.
+
+Las carpetas `scorm/c1-1/` a `scorm/c3-4/` contienen las fuentes; el `imsmanifest.xml` de cada paquete identifica el HTML de lanzamiento vigente. El contenido siguiente describe el prototipo histórico Python/Streamlit y no sustituye el inventario SCORM de cierre.
+
+---
+
 # Software interactivo para Teoría de Señales
 
 Este repositorio reúne el desarrollo del proyecto de grado orientado a construir un software interactivo para la generación, el análisis espectral y la práctica guiada de señales discretas en la asignatura Teoría de Señales.
