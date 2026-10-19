@@ -9,6 +9,6 @@ def feedback_for_attempt(correct: bool, attempt_number: int) -> str:
     if attempt_number == 1:
         return "El resultado todavía no coincide. Revisa el procedimiento y vuelve a intentarlo."
     return (
-        "El resultado aún presenta diferencias. Comprueba longitudes, índices y operaciones; "
-        "si lo necesitas, consulta la ayuda del paso."
+        "El resultado aún presenta diferencias. Comprueba los valores, índices y operaciones; "
+        "si lo necesitas, consulta la orientación del paso."
     )

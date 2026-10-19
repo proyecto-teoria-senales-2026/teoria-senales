@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest identifier="TS_C3_1_SCORM_12_V12" version="12.0"
+  xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
+  xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsproject.org/xsd/imscp_rootv1p1p2 ims_xml.xsd http://www.adlnet.org/xsd/adlcp_rootv1p2 adlcp_rootv1p2.xsd">
+  <organizations default="ORG_C3_1_V12"><organization identifier="ORG_C3_1_V12"><title>Teoría de Señales — C-3-1</title><item identifier="ITEM_C3_1_V12" identifierref="RES_C3_1_V12"><title>Transformada de Fourier de tiempo discreto</title></item></organization></organizations>
+  <resources><resource identifier="RES_C3_1_V12" type="webcontent" adlcp:scormtype="sco" href="index-v12.html"><file href="index-v12.html"/><file href="styles-v12.css"/><file href="activity-v12.js"/><file href="scorm12-runtime-v12.js"/><file href="guia_estudiante_C-3-1_V12.pdf"/></resource></resources>
+</manifest>

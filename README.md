@@ -1,110 +1,50 @@
 # Software interactivo para Teoría de Señales
 
-Este repositorio reúne el desarrollo del proyecto de grado orientado a construir un software interactivo para la generación, el análisis espectral y la práctica guiada de señales discretas en la asignatura Teoría de Señales.
+Recursos educativos interactivos para la asignatura Teoría de Señales del programa de Ingeniería Electrónica de la Universidad de Ibagué.
 
-**Autores**
+**Autores del trabajo de grado**
 
 - Juan Esteban Rengifo Segura
 - Julián Felipe Montaña Aguilar
 
-**Programa:** Ingeniería Electrónica  
-**Institución:** Universidad de Ibagué  
-**Estado del proyecto:** arquitectura inicial y piloto funcional del ejercicio de convolución.
+## Ejercicios y uso en Moodle
 
-## Estado actual
+La entrega reúne doce ejercicios, organizados en tres componentes de cuatro actividades. Los paquetes SCORM 1.2 están aprobados e incorporados al curso en Moodle, con sus respectivas guías del estudiante.
 
-La versión disponible implementa el núcleo del ejercicio **C3-3: Convolución lineal de señales discretas y verificación mediante DFT/FFT**. El ejercicio conserva las secuencias y longitudes de transformación aprobadas para el piloto.
+Cada carpeta de ejercicio contiene el código de la actividad, los recursos de interfaz, la guía y el manifiesto que identifica su archivo de inicio.
 
-El desarrollo permite:
+| Componente | Ejercicios | Código y guías |
+|---|---|---|
+| 1 | C-1-1, C-1-2, C-1-3 y C-1-4 | [C-1-1](scorm/c1-1/) · [C-1-2](scorm/c1-2/) · [C-1-3](scorm/c1-3/) · [C-1-4](scorm/c1-4/) |
+| 2 | C-2-1, C-2-2, C-2-3 y C-2-4 | [C-2-1](scorm/c2-1/) · [C-2-2](scorm/c2-2/) · [C-2-3](scorm/c2-3/) · [C-2-4](scorm/c2-4/) |
+| 3 | C-3-1, C-3-2, C-3-3 y C-3-4 | [C-3-1](scorm/c3-1/) · [C-3-2](scorm/c3-2/) · [C-3-3](scorm/c3-3/) · [C-3-4](scorm/c3-4/) |
 
-- calcular la convolución lineal;
-- verificar el resultado mediante DFT/FFT con `N = 3` y `N = 5`;
-- validar cuatro pasos numéricos sin anticipar la respuesta completa;
-- registrar intentos, correcciones y ayudas consultadas;
-- guardar la sesión en un archivo JSON;
-- generar un reporte PDF por estudiante y ejercicio;
-- dejar las respuestas interpretativas para revisión del docente.
+## Descarga de paquetes
 
-La interacción por consola es provisional. Su propósito es comprobar que el procesamiento, la validación, el seguimiento y la generación del reporte funcionan de forma independiente antes de definir la interfaz gráfica definitiva.
+Los archivos de instalación se encuentran en [scorm/dist](scorm/dist/). Para cargar una actividad en Moodle se utiliza el ZIP correspondiente, sin descomprimirlo.
 
-## Estructura del repositorio
+Los archivos `C1-1_SCORM_1.2.zip` a `C3-4_SCORM_1.2.zip` corresponden a las versiones aprobadas de los doce ejercicios. La carpeta conserva también paquetes identificados por su versión.
 
-```text
-software-interactivo-teoria-senales/
-├── main.py
-├── requirements.txt
-├── src/teoria_senales/
-│   ├── app/                 # flujo provisional por consola
-│   ├── domain/              # modelos de la sesión
-│   ├── exercises/           # reglas del ejercicio C3-3
-│   ├── feedback/            # retroalimentación progresiva
-│   ├── reports/             # generación del reporte PDF
-│   ├── signal_processing/   # convolución y DFT/FFT
-│   ├── storage/             # persistencia JSON del piloto
-│   └── tracking/            # intentos, ayudas y criterios
-├── tests/                   # pruebas automatizadas
-└── docs/                    # arquitectura, alcance y evidencias
-```
+## Guías del estudiante
 
-## Instalación
+Las guías que acompañan la entrega se encuentran dentro de las carpetas de cada ejercicio:
 
-Se requiere Python 3.11 o una versión posterior.
+| Componente 1 | Componente 2 | Componente 3 |
+|---|---|---|
+| [C-1-1](scorm/c1-1/guia_estudiante_C-1-1.pdf) | [C-2-1](scorm/c2-1/guia_estudiante_C-2-1.pdf) | [C-3-1](scorm/c3-1/guia_estudiante_C-3-1_V12.pdf) |
+| [C-1-2](scorm/c1-2/guia_estudiante_C-1-2.pdf) | [C-2-2](scorm/c2-2/guia_estudiante_C-2-2.pdf) | [C-3-2](scorm/c3-2/guia_estudiante_C-3-2_V5.pdf) |
+| [C-1-3](scorm/c1-3/guia_estudiante_C-1-3.pdf) | [C-2-3](scorm/c2-3/guia_estudiante_C-2-3.pdf) | [C-3-3](scorm/c3-3/guia_estudiante_C-3-3_V16.pdf) |
+| [C-1-4](scorm/c1-4/guia_estudiante_C-1-4_V6.pdf) | [C-2-4](scorm/c2-4/guia_estudiante_C-2-4_V7.pdf) | [C-3-4](scorm/c3-4/guia_estudiante_C-3-4_V4.pdf) |
 
-```bash
-python -m venv .venv
-```
+## Organización del desarrollo
 
-En Windows:
+- `scorm/c1-1/` a `scorm/c3-4/`: código y recursos de los doce ejercicios.
+- `scorm/dist/`: paquetes ZIP para Moodle.
+- `scorm/docs/`: inventario y registro técnico de versiones.
+- `docs/`: documentación del proyecto y de etapas anteriores.
+- `src/`, `pages/` y archivos Python de la raíz: prototipo previo desarrollado en Python y Streamlit.
+- `tests/`: pruebas automatizadas del desarrollo.
 
-```bash
-.venv\Scripts\activate
-```
+Las guías y las instrucciones del prototipo previo se conservan como documentación de esa etapa. Para consultar las actividades entregadas en Moodle deben utilizarse las carpetas y las guías SCORM enlazadas arriba.
 
-En Linux o macOS:
-
-```bash
-source .venv/bin/activate
-```
-
-Después se instalan las dependencias:
-
-```bash
-python -m pip install -r requirements.txt
-```
-
-## Ejecución
-
-Para generar una sesión de demostración con datos ficticios:
-
-```bash
-python main.py --demo
-```
-
-Para recorrer el ejercicio desde la consola:
-
-```bash
-python main.py
-```
-
-Los archivos generados durante la ejecución se guardan en `demo_outputs/`. Esta carpeta no se publica porque puede contener información de sesiones de prueba.
-
-## Pruebas
-
-```bash
-python -m unittest discover -s tests -v
-```
-
-Las pruebas verifican los resultados numéricos de referencia, la validación de longitudes y la generación de los archivos JSON y PDF.
-
-## Documentación
-
-- [Arquitectura inicial del sistema](docs/Arquitectura_Inicial_Sistema.pdf)
-- [Diagrama de arquitectura](docs/Diagrama_Arquitectura_Sistema.png)
-- [Decisiones y estado del desarrollo](docs/estado_actual.md)
-- [Reporte de demostración con datos ficticios](docs/evidencias/reporte_demostracion_C3-3.pdf)
-
-## Límites actuales
-
-Este repositorio no contiene todavía la interfaz gráfica final, la integración de voz ni los otros once ejercicios. También falta definir el mecanismo definitivo de almacenamiento, la forma de consulta del reporte y el nivel de automatización de los criterios interpretativos.
-
-El código y la documentación se mantienen en un repositorio privado mientras se definen las condiciones institucionales de uso y distribución.
+El historial del repositorio conserva la evolución del proyecto.

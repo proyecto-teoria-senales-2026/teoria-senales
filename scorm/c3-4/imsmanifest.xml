@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest identifier="TS_C3_4_SCORM_12" version="4.0" xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2" xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.imsproject.org/xsd/imscp_rootv1p1p2 ims_xml.xsd http://www.adlnet.org/xsd/adlcp_rootv1p2 adlcp_rootv1p2.xsd">
+<organizations default="ORG_C3_4"><organization identifier="ORG_C3_4"><title>Teoría de Señales — C-3-4</title><item identifier="ITEM_C3_4" identifierref="RES_C3_4"><title>Análisis espectral de señales de voz</title></item></organization></organizations>
+<resources><resource identifier="RES_C3_4" type="webcontent" adlcp:scormtype="sco" href="index-v4.html"><file href="index-v4.html"/><file href="styles-v4.css"/><file href="scorm12-runtime-v4.js"/><file href="activity-v4.js"/><file href="guia_estudiante_C-3-4_V4.pdf"/></resource></resources>
+</manifest>

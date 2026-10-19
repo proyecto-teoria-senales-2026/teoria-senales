@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest identifier="TS_C2_3_V2_SCORM_12" version="2.0"
+  xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
+  xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsproject.org/xsd/imscp_rootv1p1p2 ims_xml.xsd http://www.adlnet.org/xsd/adlcp_rootv1p2 adlcp_rootv1p2.xsd">
+  <organizations default="ORG_C2_3_V2">
+    <organization identifier="ORG_C2_3_V2">
+      <title>Teoría de Señales — C-2-3</title>
+      <item identifier="ITEM_C2_3_V2" identifierref="RES_C2_3_V2">
+        <title>Propiedades de la transformada continua de Fourier</title>
+      </item>
+    </organization>
+  </organizations>
+  <resources>
+    <resource identifier="RES_C2_3_V2" type="webcontent" adlcp:scormtype="sco" href="index.html">
+      <file href="index.html"/>
+      <file href="styles.css"/>
+      <file href="activity.js"/>
+      <file href="scorm12-runtime.js"/>
+      <file href="guia_estudiante_C-2-3.pdf"/>
+    </resource>
+  </resources>
+</manifest>
